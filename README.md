@@ -5,9 +5,11 @@ how to run?
 
 1. clone this project to the local
 
+    git clone https://github.com/shepherliu/bzzwikimirror.git
+
 2. cd to this project and build the docker image: 
    
-    docker build -t ubuntu/bzzwikimirror:v1 
+    cd bzzwikimirror && docker build -t ubuntu/bzzwikimirror:v1 .
 
 3. run the docker image for example: 
 
