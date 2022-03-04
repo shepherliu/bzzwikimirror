@@ -11,6 +11,6 @@ COPY entry.sh entry.sh
 
 COPY mirror.py mirror.py
 
-ENTRYPOINT ["sh","~/entry.sh"]
+ENTRYPOINT ["sh","entry.sh"]
 
 CMD ["https://download.kiwix.org/zim/wikipedia/wikipedia_bm_all_maxi_2022-02.zim"]
