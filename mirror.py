@@ -23,7 +23,20 @@ def getFiles(path):
   
   return files    
 
+def uploadToSwarm(filename):
+  swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
+  
+  files = {filename: (filename, open(filename', 'rb'))}
+                                     
+  r = requests.post(url, files=files, data = None)
+                                     
+  return r.text
+
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
-    print(file)
+    result = uploadToSwarm(file)
+    print(result)                                 
+                                     
+                                     
+                                     
   
