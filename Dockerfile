@@ -7,9 +7,9 @@ RUN cd ~ \
     && tar xzvf zim-tools_linux-x86_64-3.1.0.tar.gz \
     && rm zim-tools_linux-x86_64-3.1.0.tar.gz
 
-COPY entry.sh ~/
+COPY entry.sh entry.sh 
 
-COPY mirror.py ~/
+COPY mirror.py mirror.py
 
 ENTRYPOINT ["sh","~/entry.sh"]
 
