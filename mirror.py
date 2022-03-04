@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python3
 import os
+import requests
 
 wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
