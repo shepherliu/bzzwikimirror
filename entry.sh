@@ -1,5 +1,5 @@
 cd ~
-wget $1 -o wiki.zim
+wget -o wiki.zim $1
 
 rm -rf ./docs
 
