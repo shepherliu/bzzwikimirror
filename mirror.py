@@ -7,6 +7,8 @@ wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
 htmlDir = os.path.join(os.environ['HOME'], 'docs/A')
 
+fileHashs = dict()
+
 def getFiles(path):
   items = os.listdir(path)
   files = []
