@@ -1,4 +1,5 @@
 cd ~
+
 wget -qO wiki.zim $1
 
 rm -rf ./docs
@@ -7,6 +8,4 @@ rm -rf ./docs
 
 rm -f wiki.zim
 
-ls /mirror.py
-
-python3 ~/mirror.py
+python3 /mirror.py
