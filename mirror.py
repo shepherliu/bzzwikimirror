@@ -3,16 +3,16 @@
 #!/usr/bin/python3
 import os
 
-wikipediaDir="~/docs"
+wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
-htmlDir="~/docs/A"
+htmlDir = os.path.join(os.environ['HOME'], 'docs/A')
 
 def getFiles(path):
   items = os.listdir(path)
   files = []
   
   for item in items:
-    item = os.path.join(path,item)
+    item = os.path.join(path, item)
     if os.path.isdir(item):
       files.extend(getFiles(item))
     elif os.path.isfile(item):
