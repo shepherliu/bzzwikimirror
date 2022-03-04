@@ -28,7 +28,7 @@ def uploadToSwarm(filename):
   
   files = {filename: (filename, open(filename, 'rb'))}
                                      
-  r = requests.post(url, files=files, data = None)
+  r = requests.post(swarmUrl, files=files, data = None)
                                      
   return r.text
 
