@@ -3,9 +3,9 @@
 #!/usr/bin/python3
 import os
 
-wikipediaDir="~/docs"
+wikipediaDir="$home/docs"
 
-htmlDir="~/docs/A"
+htmlDir="$home/docs/A"
 
 def getFiles(path):
   items = os.listdir(path)
