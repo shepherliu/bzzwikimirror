@@ -13,5 +13,7 @@ rm -rf ./docs
 #clean the zim file
 rm -f wiki.zim
 
+ls ~
+
 #run the script to mirror the wikipedia files to swarm and output the index.html file hash content on the swarm
 python3 /mirror.py
