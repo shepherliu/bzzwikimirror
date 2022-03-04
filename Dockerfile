@@ -1,7 +1,5 @@
 FROM ubuntu
 
-COPY *.py ~/
-
 RUN cd ~ \
     && apt-get update \
     && apt-get install wget python3 -y \
@@ -9,7 +7,9 @@ RUN cd ~ \
     && tar xzvf zim-tools_linux-x86_64-3.1.0.tar.gz \
     && rm zim-tools_linux-x86_64-3.1.0.tar.gz
 
-COPY *.sh ~/
+COPY entry.sh ~/entry.sh
+
+COPY mirror.py ~/mirror.py
 
 ENTRYPOINT ["sh","~/entry.sh"]
 
