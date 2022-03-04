@@ -2,7 +2,8 @@ FROM ubuntu
 
 RUN cd ~ \
     && apt-get update \
-    && apt-get install wget python3 -y \
+    && apt-get install wget python3 python3-pip -y \
+    && pip3 install requests \
     && wget https://download.openzim.org/release/zim-tools/zim-tools_linux-x86_64-3.1.0.tar.gz \
     && tar xzvf zim-tools_linux-x86_64-3.1.0.tar.gz \
     && rm zim-tools_linux-x86_64-3.1.0.tar.gz
