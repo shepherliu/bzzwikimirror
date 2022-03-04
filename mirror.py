@@ -24,10 +24,12 @@ def getFiles(path):
   
   return files    
 
-def uploadToSwarm(filename):
+def uploadToSwarm(filepath):
   swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
-  data = filename.encode(encoding='utf-8') + open(filename, 'rb').read()
+  filename = filepath.split('/')[-1]
+  
+  data = filename.encode(encoding='utf-8') + open(filepath, 'rb').read()
   
   headers = {
               "accept":"application/json, text/plain, */*",
@@ -46,7 +48,7 @@ def uploadToSwarm(filename):
     return json.loads(r.text).get('message')
   
   reference = json.loads(r.text).get('reference')
-  fileHashs[filename] = reference
+  fileHashs[filepath] = reference
   
   return reference
 
