@@ -26,7 +26,7 @@ def getFiles(path):
 def uploadToSwarm(filename):
   swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
-  files = {filename: (filename, open('filename', 'rb'))}
+  files = {filename: (filename, open(filename, 'rb'))}
                                      
   r = requests.post(url, files=files, data = None)
                                      
