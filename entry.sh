@@ -7,6 +7,4 @@ rm -rf ./docs
 
 rm -f wiki.zim
 
-ls /
-
 python3 ~/mirror.py
