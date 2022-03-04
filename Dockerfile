@@ -1,5 +1,7 @@
 FROM ubuntu
 
+COPY *.py ~/
+
 RUN cd ~ \
     && apt-get update \
     && apt-get install wget python3 -y \
@@ -8,8 +10,6 @@ RUN cd ~ \
     && rm zim-tools_linux-x86_64-3.1.0.tar.gz
 
 COPY *.sh ~/
-
-COPY *.py ~/
 
 ENTRYPOINT ["sh","~/entry.sh"]
 
