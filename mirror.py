@@ -33,7 +33,7 @@ def uploadToSwarm(filepath):
   
   headers = {
               "accept":"application/json, text/plain, */*",
-              "content-type": "application/x-tar",
+              "content-type": "application/octet-stream ",
               "swarm-collection": "true",
               "swarm-index-document": filename,
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
