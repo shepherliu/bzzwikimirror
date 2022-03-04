@@ -35,7 +35,7 @@ def uploadToSwarm(filename):
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
     result = uploadToSwarm(file)
-    print(result)                                 
+    print(file, result)                                 
                                      
                                      
                                      
