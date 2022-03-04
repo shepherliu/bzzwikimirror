@@ -1,8 +1,10 @@
 cd ~
-wget $1
+wget $1 -o wiki.zim
 
 rm -rf ./docs
 
-./zim-tools_linux-x86_64-3.1.0/zimdump dump --dir=./docs --ns A $1
+./zim-tools_linux-x86_64-3.1.0/zimdump dump --dir=./docs --ns A wiki.zim
 
-python3 mirror.py
+rm -f wiki.zim
+
+python3 ~/mirror.py
