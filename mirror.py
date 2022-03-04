@@ -13,8 +13,13 @@ def getFiles(path):
   for item in items:
     item = os.path.join(path,item)
     if os.path.isdir(item):
-      files.append(getFiles(item))
+      files.extend(getFiles(item))
     elif os.path.isfile(item):
       files.append(item)
   
   return files    
+
+if __name__ == '__main__':
+  for file in getFiles(wikipediaDir):
+    print(file)
+  
