@@ -7,7 +7,7 @@ how to run?
 
 2. cd to this project and build the docker image: 
    
-    docker build -t ubuntu/bzzwikimirror:v1 . 
+    docker build -t ubuntu/bzzwikimirror:v1 
 
 3. run the docker image for example: 
 
