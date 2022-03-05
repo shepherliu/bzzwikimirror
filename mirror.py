@@ -81,7 +81,7 @@ def addHeader(filename, length):
   
   for head in fileHeader:
     if len(fileHeader[head]) > 0:
-      buffer = buffer + fileHeader[head].encode(encoding = 'utf-8')
+      buffer = buffer + fileHeader[head].encode()
     
     patch = headFormat[head] - len(fileHeader[head])
     
@@ -165,10 +165,8 @@ def uploadToSwarm(filepath):
               "swarm-index-document": filename,
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
-  try:                                   
-    r = requests.post(swarmUrl, headers = headers,  data = data)
-  except:
-    r = requests.post(swarmUrl, headers = headers,  data = data.decode('utf-8'))
+
+  r = requests.post(swarmUrl, headers = headers,  data = data)
     
   if r.status_code < 200 or r.status_code > 299:
     return r.text
