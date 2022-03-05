@@ -141,7 +141,8 @@ if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
     print(file)
     result = uploadToSwarm(file)
-    print(result,'\n') 
+    print(result)
+    print('\n')
     time.sleep(60)                                
                                      
                                      
