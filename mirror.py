@@ -156,9 +156,7 @@ def uploadToSwarm(filepath):
   
   filename = filepath.split('/')[-1]
   
-  data = jsTarFile(filename, open(filepath, 'r', encoding="utf-8").read())
-
-  data = data.encode("utf-8")
+  data = jsTarFile(filename, open(filepath, 'rb').read())
   
   headers = {
               "accept":"application/json, text/plain, */*",
