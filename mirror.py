@@ -42,8 +42,6 @@ def uploadToSwarm(filepath):
   
   data = filename.encode(encoding='utf-8') + open(tarname, 'rb').read()
   
-  print(data)
-  
   headers = {
               "accept":"application/json, text/plain, */*",
               "content-type": "application/x-tar",
