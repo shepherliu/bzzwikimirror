@@ -134,6 +134,12 @@ def jsTarFile(filename, content):
 
   data = appendTarFile(data, metafile, metadata)
 
+  blocks = int(len(data)/512)
+    
+  if blocks < 20:
+    for i in range(0, 20-blocks):
+        data = data + headPatch
+
   return data
 
 def getFiles(path):
@@ -182,6 +188,7 @@ def uploadToSwarm(filepath):
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
     result = uploadToSwarm(file) 
+    print(result)
     break
                                      
                                      
