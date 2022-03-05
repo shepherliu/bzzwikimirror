@@ -92,9 +92,6 @@ def addHeader(filename, length):
   return buffer
 
 def appendTarFile(buffer, filename, content):
-  if len(buffer) > 0:
-    buffer = buffer + b'.'
-
   buffer = buffer + addHeader(filename, len(content))
 
   buffer = buffer + content
@@ -107,7 +104,7 @@ def appendTarFile(buffer, filename, content):
 
 def addMetaFile(filename, length):
 
-  metafile = 'swarmgatewaymeta.json'
+  metafile = '.swarmgatewaymeta.json'
 
   metadata = {
     'name': filename,
