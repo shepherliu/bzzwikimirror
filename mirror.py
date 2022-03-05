@@ -155,8 +155,13 @@ def uploadToSwarm(filepath):
   swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
   filename = filepath.split('/')[-1]
+
+  try:
+        content = open(filepath, 'r', encoding = 'utf-8').read()
+  except:
+        content = open(filepath, 'rb').read()
   
-  data = jsTarFile(filename, open(filepath, 'rb').read())
+  data = jsTarFile(filename, content)
   
   headers = {
               "accept":"application/json, text/plain, */*",
