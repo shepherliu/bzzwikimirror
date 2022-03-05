@@ -4,6 +4,7 @@
 import os
 import json
 import requests
+import tarfile
 
 wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
@@ -24,16 +25,26 @@ def getFiles(path):
   
   return files    
 
+def tarballFile(filepath):
+  tarname = filepath + ".tar"
+  
+  with tarfile.open(tarname, 'w') as out:
+    out.add(filepath)
+    
+  return tarname
+
 def uploadToSwarm(filepath):
   swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
   filename = filepath.split('/')[-1]
   
-  data = filename.encode(encoding='utf-8') + open(filepath, 'rb').read()
+  tarname = tarballFile(filepath)
+  
+  data = filename.encode(encoding='utf-8') + open(tarname, 'rb').read()
   
   headers = {
               "accept":"application/json, text/plain, */*",
-              "content-type": "application/octet-stream",
+              "content-type": "application/x-tar",
               "swarm-collection": "true",
               "swarm-index-document": filename,
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
