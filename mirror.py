@@ -122,6 +122,9 @@ def uploadToSwarm(filepath):
               "swarm-index-document": filename,
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
+  
+  print(headers)
+  print(data)
                                      
   r = requests.post(swarmUrl, headers = headers,  data = data)
   
