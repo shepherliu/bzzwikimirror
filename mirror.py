@@ -166,7 +166,7 @@ def uploadToSwarm(filepath):
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
                                      
-  r = requests.post(swarmUrl, headers = headers,  data = data.decode('utf-8'))
+  r = requests.post(swarmUrl, headers = headers,  data = data.decode('utf-8', 'ignore'))
   
   if r.status_code < 200 or r.status_code > 299:
     r = requests.post(swarmUrl, headers = headers,  data = data)
