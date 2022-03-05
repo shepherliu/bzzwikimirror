@@ -11,40 +11,7 @@ wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
 htmlDir = os.path.join(os.environ['HOME'], 'docs/A')
 
-fileHashs = dict()
-
-def pad(num, length):
-  bits = oct(num).encode(encoding='utf-8')[2:]
-
-  length = len(bits) + 11 - length
-
-  return b'00000000000'[length:] + bits
-
-def addChecksum(fileHeader):
-  sum = 0
-  for vals in fileHeader.values():
-    for d in vals:
-      sum = sum + d
-  return sum
-  
-
-def addHeader(filename, length):
-  
-  fileHeader = {
-    'fileName': filename.encode(encoding = 'utf-8'),
-    'fileMode': b'0000777',
-    'uid': b'0000000',
-    'gid': b'0000000',
-    'fileSize': pad(length, 11),
-    'mtime': pad(int(time.time()), 11),
-    'checksum': b'        ',
-    'type': b'0',
-    'ustar': b'ustar  ',
-    'owner': b'',
-    'group': b''
-  }
-  
-  headFormat = {
+headFormat = {
     'fileName': 100,
     'fileMode': 8,
     'uid': 8,
@@ -61,11 +28,61 @@ def addHeader(filename, length):
     'minorNumber': 8,
     'filenamePrefix': 155,
     'padding': 12
-  }
+}
   
+headList = ['fileName', 'fileMode', 'uid', 'gid', 'fileSize', 'mtime', 'checksum', 'type', 'linkName', 'ustar', 'owner', 'group', 'majorNumber', 'minorNumber', 'filenamePrefix','padding']
+  
+headPatch = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+  
+fileHashs = dict()
+
+def pad(num, length):
+  bits = oct(num)[2:]
+
+  length = len(bits) + 11 - length
+
+  return '00000000000'[length:] + bits
+
+def addChecksum(fileHeader):
+  sum = 0
+  for vals in fileHeader.values():
+    if len(vals) > 0:
+      data = vals.encode(encoding = 'utf-8')
+    
+      for d in data:
+        sum = sum + d
+  return sum  
+
+def addHeader(filename, length):
+  
+  fileHeader = {
+    'fileName': filename,
+    'fileMode': '0000777',
+    'uid': '0000000',
+    'gid': '0000000',
+    'fileSize': pad(length, 11),
+    'mtime': pad(int(time.time()), 11),
+    'checksum': '        ',
+    'type': '0',
+    'ustar': 'ustar  ',
+    'owner': '',
+    'group': ''
+  }
+    
   checksum = addChecksum(fileHeader)
   
   fileHeader['checksum'] = pad(checksum, 6) + '\u0000 '
+  
+  buffer = b''
+  
+  for head in fileHeader:
+    if len(fileHeader[head]) > 0:
+      buffer = buffer + fileHeader[head].encode(encoding = 'utf-8')
+    
+    patch = headFormat[head] - len(fileHeader[head])
+    
+    if patch > 0:
+      buffer = buffer + headPatch[0:patch]
 
   return buffer
 
@@ -138,7 +155,6 @@ def uploadToSwarm(filepath):
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
   
-  print(headers)
   print(data)
                                      
   r = requests.post(swarmUrl, headers = headers,  data = data)
@@ -156,10 +172,8 @@ def uploadToSwarm(filepath):
 
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
-    print(file)
-    result = uploadToSwarm(file)
-    print(result)
-    print('\n')                        
+    result = uploadToSwarm(file) 
+    return
                                      
                                      
                                      
