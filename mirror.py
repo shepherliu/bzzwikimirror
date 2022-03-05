@@ -156,10 +156,7 @@ def uploadToSwarm(filepath):
   
   filename = filepath.split('/')[-1]
 
-  try:
-        content = open(filepath, 'r', encoding = 'utf-8').read().encode('utf-8')
-  except:
-        content = open(filepath, 'rb').read()
+  content = open(filepath, 'rb').read()
   
   data = jsTarFile(filename, content)
   
