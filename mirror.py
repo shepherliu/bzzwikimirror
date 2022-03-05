@@ -155,13 +155,8 @@ def uploadToSwarm(filepath):
   swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
   filename = filepath.split('/')[-1]
-  
-  try:
-    content = open(filepath, 'r', encoding = 'utf-8').read().encode('utf-8')
-  except:
-    content = open(filepath, 'rb').read()
     
-  data = jsTarFile(filename, content)
+  data = jsTarFile(filename, open(filepath, 'rb').read())
   
   headers = {
               "accept":"application/json, text/plain, */*",
@@ -171,7 +166,7 @@ def uploadToSwarm(filepath):
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
                                      
-  r = requests.post(swarmUrl, headers = headers,  data = data)
+  r = requests.post(swarmUrl, headers = headers,  data = data.decode('utf-8').encode('latin1'))
   
   if r.status_code < 200 or r.status_code > 299:
     r = requests.post(swarmUrl, headers = headers,  data = data)
