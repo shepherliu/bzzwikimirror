@@ -143,7 +143,7 @@ if __name__ == '__main__':
     #result = uploadToSwarm(file)
     #print(result)
     print('\n')
-    time.sleep(60)                                
+    time.sleep(1)                                
                                      
                                      
                                      
