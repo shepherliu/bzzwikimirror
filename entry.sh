@@ -14,4 +14,6 @@ rm -rf ./docs
 rm -f wiki.zim
 
 #run the script to mirror the wikipedia files to swarm and output the index.html file hash content on the swarm
+sed -i 's#latin-1#utf-8#g' /usr/lib/python3.8/http/client.py
+
 python3 /mirror.py
