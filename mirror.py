@@ -178,10 +178,10 @@ def uploadToSwarm(filepath):
 
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
+    time.sleep(10)
     print(file)
     result = uploadToSwarm(file) 
     print(result)
-    time.sleep(5)
                                      
                                      
                                      
