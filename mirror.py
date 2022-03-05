@@ -14,86 +14,86 @@ htmlDir = os.path.join(os.environ['HOME'], 'docs/A')
 fileHashs = dict()
 
 def pad(num, length):
-	bits = oct(num).encode(encoding='utf-8')[2:]
+  bits = oct(num).encode(encoding='utf-8')[2:]
 
-	length = len(bits) + 11 - length
+  length = len(bits) + 11 - length
 
-	return b'00000000000'[length:] + bits
+  return b'00000000000'[length:] + bits
 
 def checksum(data):
-	sum = 0
-	for d in data:
-		sum = sum + d
+  sum = 0
+  for d in data:
+    sum = sum + d
 
-	return sum
+  return sum
 
 def addHeader(filename, length):
-	mod = b'0000777'
-	uid = b'0000000'
-	gid = b'0000000'
+  mod = b'0000777'
+  uid = b'0000000'
+  gid = b'0000000'
 
-	buffer = filename.encode(encoding = 'utf-8')
+  buffer = filename.encode(encoding = 'utf-8')
 
-	buffer = buffer + mod
+  buffer = buffer + mod
 
-	buffer = buffer + uid
+  buffer = buffer + uid
 
-	buffer = buffer + gid
+  buffer = buffer + gid
 
-	buffer = buffer + pad(length, 11)
+  buffer = buffer + pad(length, 11)
 
-	buffer = buffer + pad(int(time.time()), 11)
+  buffer = buffer + pad(int(time.time()), 11)
 
-	sum = checksum(buffer) + 10*32
+  sum = checksum(buffer) + 10*32
   
   sum = sum + checksum(b'0ustar')
 
-	buffer = buffer + pad(sum, 6)
+  buffer = buffer + pad(sum, 6)
 
-	buffer = buffer + b'\u0000 0ustar  '
+  buffer = buffer + b'\u0000 0ustar  '
 
-	return buffer
+  return buffer
 
 def appendTarFile(buffer, filename, content):
-	if len(buffer) > 0:
-		buffer = buffer + b'.'
+  if len(buffer) > 0:
+    buffer = buffer + b'.'
 
-	buffer = buffer + addHeader(filename, len(content))
+  buffer = buffer + addHeader(filename, len(content))
 
-	buffer = buffer + content
+  buffer = buffer + content
 
-	return buffer
+  return buffer
 
 def addMetaFile(filename, length):
 
-	metafile = 'swarmgatewaymeta.json'
+  metafile = 'swarmgatewaymeta.json'
 
-	metadata = {
-		'name': filename,
-		'size': length,
-		'type': ''
-	}
+  metadata = {
+    'name': filename,
+    'size': length,
+    'type': ''
+  }
 
-	fileType = '.' + filename.split('.')[-1]
+  fileType = '.' + filename.split('.')[-1]
 
-	try:
-		metadata['type'] = mimetypes.types_map[fileType]
-	except:
-		metadata['type'] = ''
+  try:
+    metadata['type'] = mimetypes.types_map[fileType]
+  except:
+    metadata['type'] = ''
 
-	content = json.dumps(metadata).encode(encoding = 'utf-8')
+  content = json.dumps(metadata).encode(encoding = 'utf-8')
 
-	return [metafile, content]
+  return [metafile, content]
 
 def jsTarFile(filename, content):
 
-	data = appendTarFile(b'', filename, content)
+  data = appendTarFile(b'', filename, content)
 
-	metafile, metadata = addMetaFile(filename, len(content))
+  metafile, metadata = addMetaFile(filename, len(content))
 
-	data = appendTarFile(data, metafile, metadata)
+  data = appendTarFile(data, metafile, metadata)
 
-	return data
+  return data
 
 def getFiles(path):
   items = os.listdir(path)
