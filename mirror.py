@@ -46,7 +46,8 @@ def uploadToSwarm(filepath):
     r = requests.post(swarmUrl, headers = headers,  data = data)
     
   if r.status_code < 200 or r.status_code > 299:
-    return json.loads(r.text).get('message')
+    print(filepath, r.text)
+    return r.text
   
   reference = json.loads(r.text).get('reference')
   fileHashs[filepath] = reference
@@ -56,7 +57,7 @@ def uploadToSwarm(filepath):
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
     result = uploadToSwarm(file)
-    print(file, result)                                 
+    #print(file, result)                                 
                                      
                                      
                                      
