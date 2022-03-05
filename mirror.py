@@ -20,37 +20,52 @@ def pad(num, length):
 
   return b'00000000000'[length:] + bits
 
-def checksum(data):
+def addChecksum(fileHeader):
   sum = 0
-  for d in data:
-    sum = sum + d
-
+  for vals in fileHeader.values():
+    for d in vals:
+      sum = sum + d
   return sum
+  
 
 def addHeader(filename, length):
-  mod = b'0000777'
-  uid = b'0000000'
-  gid = b'0000000'
-
-  buffer = filename.encode(encoding = 'utf-8')
-
-  buffer = buffer + mod
-
-  buffer = buffer + uid
-
-  buffer = buffer + gid
-
-  buffer = buffer + pad(length, 11)
-
-  buffer = buffer + pad(int(time.time()), 11)
-
-  sum = checksum(buffer) + 10*32
   
-  sum = sum + checksum(b'0ustar')
-
-  buffer = buffer + pad(sum, 6)
-
-  buffer = buffer + b'\u0000 0ustar  '
+  fileHeader = {
+    'fileName': filename.encode(encoding = 'utf-8'),
+    'fileMode': b'0000777',
+    'uid': b'0000000',
+    'gid': b'0000000',
+    'fileSize': pad(length, 11),
+    'mtime': pad(int(time.time()), 11),
+    'checksum': b'        ',
+    'type': b'0',
+    'ustar': b'ustar  ',
+    'owner': b'',
+    'group': b''
+  }
+  
+  headFormat = {
+    'fileName': 100,
+    'fileMode': 8,
+    'uid': 8,
+    'gid': 8,
+    'fileSize': 12,
+    'mtime': 12,
+    'checksum': 8,
+    'type': 1,
+    'linkName':100,
+    'ustar': 8,
+    'owner': 32,
+    'group': 32,
+    'majorNumber': 8,
+    'minorNumber': 8,
+    'filenamePrefix': 155,
+    'padding': 12
+  }
+  
+  checksum = addChecksum(fileHeader)
+  
+  fileHeader['checksum'] = pad(checksum, 6) + '\u0000 '
 
   return buffer
 
