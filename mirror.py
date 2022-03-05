@@ -181,6 +181,7 @@ if __name__ == '__main__':
     print(file)
     result = uploadToSwarm(file) 
     print(result)
+    time.sleep(5)
                                      
                                      
                                      
