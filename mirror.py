@@ -77,7 +77,7 @@ def addHeader(filename, length):
   
   fileHeader['checksum'] = pad(checksum, 6) + '\u0000 '
   
-  buffer = ''
+  buffer = b''
   
   for head in fileHeader:
     if len(fileHeader[head]) > 0:
