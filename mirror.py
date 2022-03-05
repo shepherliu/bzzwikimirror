@@ -12,6 +12,31 @@ htmlDir = os.path.join(os.environ['HOME'], 'docs/A')
 
 indexFile = os.path.join(os.environ['HOME'], 'docs/A/index')
 
+mainHtml = '''<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script>
+		host = "gateway-proxy-bee-2-0.gateway.ethswarm.org";
+		if (document.location.host !== host) {
+			window.location.replace("https://"+host+document.location.pathname);
+		}
+	</script>
+	<script>
+		function load(){
+			var iframe = document.getElementById("iframe");
+			var iWindow = iframe.contentWindow;
+			var iDocument = iWindow.document;
+			alert(iDocument.body.innerHTML);
+		}
+	</script>
+</head>
+<body style="height: 100%">
+	<div style="height: 100%"><iframe height="100%" width="100%" src="https://gateway-proxy-bee-2-0.gateway.ethswarm.org/bzz/dcd914e65749f7983bcb7fb58be1ae41c469713b1f187f89f12ae018a110eb00/" id="iframe" onload="load()"></iframe></div>
+</body>
+</html>
+'''
+
 headFormat = {
     'fileName': 100,
     'fileMode': 8,
@@ -153,13 +178,16 @@ def getFiles(path):
   
   return files    
 
-def uploadToSwarm(filepath):
+def uploadToSwarm(filepath, data = None):
   swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
   filename = filepath.split('/')[-1]
-    
-  data = jsTarFile(filename, open(filepath, 'rb').read())
   
+  if data is None:
+    data = jsTarFile(filename, open(filepath, 'rb').read())
+  else:
+    data = jsTarFile(filename, data.encode('utf-8'))
+    
   headers = {
               "accept":"application/json, text/plain, */*",
               "content-type": "application/x-tar",
@@ -186,7 +214,18 @@ def uploadToSwarm(filepath):
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
     time.sleep(10)
-    result = uploadToSwarm(file) 
+    if file.startswith(htmlDir):
+        continue
+    uploadToSwarm(file) 
+    
+  for file in getFiles(wikipediaDir):
+    time.sleep(10)
+    if file.startswith(htmlDir):
+        uploadToSwarm(file)
+        
+  time.sleep(10)
+  result = uploadToSwarm("main.html","")
+  print(result)
                                      
                                      
                                      
