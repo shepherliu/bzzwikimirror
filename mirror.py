@@ -1,6 +1,5 @@
-
+#!/usr/bin/python 
 # -*- coding: utf-8 -*-
-#!/usr/bin/python3
 import os
 import json
 import time
@@ -158,6 +157,8 @@ def uploadToSwarm(filepath):
   filename = filepath.split('/')[-1]
   
   data = jsTarFile(filename, open(filepath, 'rb').read())
+
+  data = data.decode('latin1')
   
   headers = {
               "accept":"application/json, text/plain, */*",
