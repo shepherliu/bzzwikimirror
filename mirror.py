@@ -10,6 +10,8 @@ wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
 htmlDir = os.path.join(os.environ['HOME'], 'docs/A')
 
+indexFile = os.path.join(os.environ['HOME'], 'docs/A/index')
+
 headFormat = {
     'fileName': 100,
     'fileMode': 8,
@@ -175,15 +177,16 @@ def uploadToSwarm(filepath):
   
   reference = json.loads(r.text).get('reference')
   fileHashs[filepath] = reference
+    
+  if filepath is indexFile:
+    print(reference)
   
   return reference
 
 if __name__ == '__main__':
   for file in getFiles(wikipediaDir):
     time.sleep(10)
-    #print(file)
     result = uploadToSwarm(file) 
-    #print(result)
                                      
                                      
                                      
