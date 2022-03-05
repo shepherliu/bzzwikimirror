@@ -61,6 +61,8 @@ def uploadToSwarm(filepath):
   reference = json.loads(r.text).get('reference')
   fileHashs[filepath] = reference
   
+  print(data)
+  
   return reference
 
 if __name__ == '__main__':
