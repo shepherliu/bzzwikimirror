@@ -106,8 +106,9 @@ def appendTarFile(buffer, filename, content):
   
   #fix the size to 512bytes block size
   patch = 512 - len(buffer)%512
-
-  buffer = buffer + headPatch[0:patch]
+  
+  if patch < 512:
+    buffer = buffer + headPatch[0:patch]
 
   return buffer
 
