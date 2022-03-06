@@ -42,4 +42,7 @@ How it Works?
    second, the swarm surport upload the whole website folder, but the folder must has an index.html so that we can visit it on swarm directly. So that we need move the "./A/index" file to "./" and rename it to "index.html", and we also need to modify the index.html content to change url redirect to "./A/" folder.
    
 3. after we have solved these problems, we can use our program in the docker image we build to download the zim file and decompress it and upload the folder to swarm automatic. then use the hash content the swarm return to visit the wikipedia docs on swarm gateway.
+
+   first, we use entry.sh to download the zim file , and decompress it to a folder, and them modify the "./A/index" file to "./index.html", and modify the url in the "index.html" file.
    
+   second, we use a python script to collect the folder files to an application/x-tar collection, and then upload the collection data to swarm gateway, finally we get the reference return by the swarm gateway. Then we can visit our wikipedia website on swarm by the reference. 
