@@ -194,12 +194,11 @@ if __name__ == '__main__':
 
   files = []
   for file in getFiles('.'):
-    if file.startswith('./A/') or file.startswith('./-/'):
+    if file.endswith('.html'):
       files.append(file)
-  
+    
   result = uploadToSwarm(files)
   print(result)
-  
                                      
                                      
                                      
