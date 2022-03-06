@@ -195,7 +195,7 @@ if __name__ == '__main__':
   files = []
   for file in getFiles('.'):
     if file.startswith('./A/') or file.startswith('./-/'):
-	files.append(file)
+      files.append(file)
   
   result = uploadToSwarm(files)
   print(result)
