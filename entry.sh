@@ -13,8 +13,12 @@ rm -rf ./docs
 #clean the zim file
 rm -f wiki.zim
 
+#move index file to root path and rename to html type
+mv docs/A/index docs/index.html
+
+#rename html files to html type
 for file in $(ls docs/A);do
-  mv docs/A/$file docs/"$file".html
+  mv docs/A/$file docs/A/"$file".html
 done
 
 #run the script to mirror the wikipedia files to swarm and output the index.html file hash content on the swarm
