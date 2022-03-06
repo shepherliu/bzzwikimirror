@@ -8,35 +8,6 @@ import requests
 
 wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
-htmlDir = os.path.join(os.environ['HOME'], 'docs/A')
-
-indexFile = os.path.join(os.environ['HOME'], 'docs/A/index')
-
-mainHtml = '''<!DOCTYPE html>
-<html style="height: 100%">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<script>
-		host = "gateway-proxy-bee-2-0.gateway.ethswarm.org";
-		if (document.location.host !== host) {
-			window.location.replace("https://"+host+document.location.pathname);
-		}
-	</script>
-	<script>
-		function load(){
-			var iframe = document.getElementById("iframe");
-			var iWindow = iframe.contentWindow;
-			var iDocument = iWindow.document;
-			alert(iDocument.body.innerHTML);
-		}
-	</script>
-</head>
-<body style="height: 100%">
-	<div style="height: 100%"><iframe height="100%" width="100%" src="https://gateway-proxy-bee-2-0.gateway.ethswarm.org/bzz/dcd914e65749f7983bcb7fb58be1ae41c469713b1f187f89f12ae018a110eb00/" id="iframe" onload="load()"></iframe></div>
-</body>
-</html>
-'''
-
 headFormat = {
     'fileName': 100,
     'fileMode': 8,
@@ -59,8 +30,6 @@ headFormat = {
 headList = ['fileName', 'fileMode', 'uid', 'gid', 'fileSize', 'mtime', 'checksum', 'type', 'linkName', 'ustar', 'owner', 'group', 'majorNumber', 'minorNumber', 'filenamePrefix','padding']
   
 headPatch = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-
-fileHashs = dict()
 
 def pad(num, length):
   bits = oct(num)[2:]
@@ -149,22 +118,6 @@ def addMetaFile(filename, length):
 
   return [metafile, content]
 
-def jsTarFile(filename, content):
-
-  data = appendTarFile(b'', filename, content)
-
-  metafile, metadata = addMetaFile(filename, len(content))
-
-  data = appendTarFile(data, metafile, metadata)
-
-  blocks = int(len(data)/512)
-    
-  if blocks < 20:
-    for i in range(0, 20-blocks):
-        data = data + headPatch
-
-  return data
-
 def getFiles(path):
   items = os.listdir(path)
   files = []
@@ -178,54 +131,70 @@ def getFiles(path):
   
   return files    
 
-def uploadToSwarm(filepath, data = None):
+def collectFilesData(files):
+  data = b''
+  sum = 0
+
+  metaName = 'website'
+
+  if len(files) is 0:
+    return None
+  elif len(files) is 1:
+    metaName = os.path.basename(files[0])
+
+  for file in files:
+    content = open(file, 'rb').read()
+    sum = sum + len(content)
+    
+    if len(files) is 1:
+        file = os.path.basename(file)
+    data = appendTarFile(data, file, content)
+
+  metafile, metadata = addMetaFile(metaName, sum)
+	
+  data = appendTarFile(data, metafile, metadata)
+
+  blocks = int(len(data)/512)
+  if blocks < 20:
+    for i in range(0, 20-blocks):
+      data = data + headPatch
+  
+  return data
+
+def uploadToSwarm(files):
   swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
-  filename = filepath.split('/')[-1]
-  
-  if data is None:
-    data = jsTarFile(filename, open(filepath, 'rb').read())
-  else:
-    data = jsTarFile(filename, data.encode('utf-8'))
+  data = collectFilesData(files)
+
+  index = 'index.html'
+  if len(files) is 1:
+      index = os.path.basename(files[0])
     
   headers = {
               "accept":"application/json, text/plain, */*",
               "content-type": "application/x-tar",
               "swarm-collection": "true",
-              "swarm-index-document": filename,
+              "swarm-index-document": index,
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
 
   r = requests.post(swarmUrl, headers = headers,  data = data)
     
   if r.status_code < 200 or r.status_code > 299:
-    print(filepath, r.text)
-    print(data)
     return r.text
   
   reference = json.loads(r.text).get('reference')
-  fileHashs[filepath] = reference
-    
-  if filepath is indexFile:
-    print(reference)
   
   return reference
 
 if __name__ == '__main__':
-  for file in getFiles(wikipediaDir):
-    time.sleep(10)
-    if file.startswith(htmlDir):
-        continue
-    uploadToSwarm(file) 
-    
-  for file in getFiles(wikipediaDir):
-    time.sleep(10)
-    if file.startswith(htmlDir):
-        uploadToSwarm(file)
-        
-  time.sleep(10)
-  result = uploadToSwarm("main.html","")
+  os.chdir(wikipediaDir)
+  files = getFiles('.')
+  print(files)
+  
+  result = uploadToSwarm(files[0:1])
   print(result)
+  
                                      
                                      
                                      
