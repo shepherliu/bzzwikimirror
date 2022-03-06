@@ -242,7 +242,7 @@ def uploadToSwarm(files):
       r = requests.post(swarmUrl, data = data, headers = headers)
       
       if r.status_code < 200 or r.status_code > 299:
-	reference = r.text
+        reference = r.text
         continue
 	
       reference = json.loads(r.text).get('reference')
