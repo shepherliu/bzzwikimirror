@@ -137,16 +137,16 @@ def collectFilesData(files):
 
   metaName = 'website'
 
-  if len(files) is 0:
+  if len(files) == 0:
     return None
-  elif len(files) is 1:
+  elif len(files) == 1:
     metaName = os.path.basename(files[0])
 
   for file in files:
     content = open(file, 'rb').read()
     sum = sum + len(content)
     
-    if len(files) is 1:
+    if len(files) == 1:
       file = os.path.basename(file)
     else:
       file = file[2:]
@@ -169,7 +169,7 @@ def uploadToSwarm(files):
   data = collectFilesData(files)
 
   index = 'index.html'
-  if len(files) is 1:
+  if len(files) == 1:
       index = os.path.basename(files[0])
     
   headers = {
