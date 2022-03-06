@@ -144,6 +144,9 @@ def collectFilesData(files):
   for file in files:
     content = open(file, 'rb').read()
     sum = sum + len(content)
+
+    if len(content) == 0:
+      continue
     
     if len(files) == 1:
       file = os.path.basename(file)
