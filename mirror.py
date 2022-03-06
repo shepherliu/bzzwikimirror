@@ -148,6 +148,8 @@ def collectFilesData(files):
     
     if len(files) is 1:
         file = os.path.basename(file)
+    else:
+	file = file[2:]
     data = appendTarFile(data, file, content)
 
   metafile, metadata = addMetaFile(metaName, sum)
