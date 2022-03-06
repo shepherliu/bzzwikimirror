@@ -252,7 +252,7 @@ if __name__ == '__main__':
     if len(file.encode(encoding = 'utf-8')) - 2 > headFormat['fileName']:
       continue
     
-    if file.endswith('./I/'):
+    if file.startswith('./I/'):
       files.append(file)
 
   # upload files to swarm    
