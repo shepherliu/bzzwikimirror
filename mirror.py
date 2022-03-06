@@ -42,10 +42,8 @@ def addChecksum(fileHeader):
   sum = 0
   for vals in fileHeader.values():
     if len(vals) > 0:
-      data = vals.encode(encoding = 'utf-8')
-    
-      for d in data:
-        sum = sum + d
+      for d in vals:
+        sum = sum + ord(d)
   return sum  
 
 def addHeader(filename, length):
