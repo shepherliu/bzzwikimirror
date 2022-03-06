@@ -4,13 +4,27 @@ import os
 import json
 import time
 import mimetypes
-import requests
+import urllib
+import urllib.parse
 
 #wiki docs dir is set to $HOME/docs, see entry.sh, we dump zim file to the $HOME/docs dir
 wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
 # a little less than 10M, this is because the swarm gateway has a limit of upload size of 10M
 maxUploadSize = 10230*1024 
+
+swarmGateways = [
+  'https://gateway-proxy-bee-0-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-2-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-3-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-5-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-6-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-7-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-8-0.gateway.ethswarm.org/bzz',
+  'https://gateway-proxy-bee-9-0.gateway.ethswarm.org/bzz'
+]
 
 #the file header info for application/x-tar, the number is the length of each item should be.
 headFormat = {
@@ -204,7 +218,6 @@ def collectFilesData(files):
 #upload files to swarm gateway, we use swarm gateway instead of fairdrive or fairos because the gateway is free for everyone
 #but the gateway has a limit of 10M upload size, in future, we can use other api instead of it if we have real use for it.
 def uploadToSwarm(files):
-  swarmUrl = 'https://gateway-proxy-bee-4-0.gateway.ethswarm.org/bzz'
   
   data = collectFilesData(files)
 
@@ -221,15 +234,18 @@ def uploadToSwarm(files):
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
 
-  r = requests.post(swarmUrl, headers = headers,  data = data)
-    
-  if r.status_code < 200 or r.status_code > 299:
-    return r.text
+
+  for swarmUrl in swarmGateways:
+    try:
+      r = urllib.request.Request(swarmUrl, data = data, headers = headers, method="POST")
+      
+      resp = urllib.request.urlopen(r).read().decode('utf-8')
+      
+      return json.loads(resp).get('reference')	
+    except:
+      continue	
   
-  #get the reference return by the swarm gateway, we will use it to search or visit the files on swarm	
-  reference = json.loads(r.text).get('reference')
-  
-  return reference
+  return "upload to swarm failed"
 
 if __name__ == '__main__':
   #change to wiki docs dir	
@@ -256,8 +272,8 @@ if __name__ == '__main__':
     if file.startswith('./I/'):
       files.append(file)
 
-  # upload files to swarm    
-  result = uploadToSwarm(files)
+  # upload files to swarm
+  result = uploadToSwarm(files)	
   
   #print the 'reference' of the files stored in swarm
   #we can visit the website on https://gateway-proxy-bee-8-0.gateway.ethswarm.org/bzz/reference, remember replace the real reference
