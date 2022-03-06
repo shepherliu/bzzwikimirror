@@ -4,6 +4,7 @@ import os
 import json
 import time
 import mimetypes
+import requests
 import urllib
 import urllib.parse
 
@@ -234,18 +235,22 @@ def uploadToSwarm(files):
               "swarm-postage-batch-id": "0000000000000000000000000000000000000000000000000000000000000000"
             }
 
-
+  reference = ""
+  #try to all swarm gateways to upload	
   for swarmUrl in swarmGateways:
     try:
-      r = urllib.request.Request(swarmUrl, data = data, headers = headers, method="POST")
+      r = requests.post(swarmUrl, data = data, headers = headers)
       
-      resp = urllib.request.urlopen(r).read().decode('utf-8')
-      
-      return json.loads(resp).get('reference')	
+      if r.status_code < 200 or r.status_code > 299:
+	reference = r.text
+        continue
+	
+      reference = json.loads(r.text).get('reference')
+      return reference
     except:
       continue	
   
-  return "upload to swarm failed"
+  return reference
 
 if __name__ == '__main__':
   #change to wiki docs dir	
