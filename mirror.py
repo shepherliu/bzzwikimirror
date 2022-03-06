@@ -8,6 +8,8 @@ import requests
 
 wikipediaDir = os.path.join(os.environ['HOME'], 'docs')
 
+maxUploadSize = 10230*1024 # a little less than 10M
+
 headFormat = {
     'fileName': 100,
     'fileMode': 8,
@@ -148,10 +150,14 @@ def collectFilesData(files):
     if len(content) == 0:
       continue
     
+    if len(data) + len(content) > maxUploadSize:
+	break
+    
     if len(files) == 1:
       file = os.path.basename(file)
     else:
       file = file[2:]
+    
     data = appendTarFile(data, file, content)
 
   metafile, metadata = addMetaFile(metaName, sum)
@@ -192,17 +198,34 @@ def uploadToSwarm(files):
   return reference
 
 if __name__ == '__main__':
+  #change to wiki docs dir	
   os.chdir(wikipediaDir)
+  
+  #files need to upload to swarm, for now swarm gateway has a limit of max 10M to upload, so we need to select some importent files to upload
+  files = ["./index.html"]
+	
+  #dir A stores html files, and dir - stores js,css files	
+  for file in getFiles('.'):
+    #swarm gateway has a limit file name to less than 100bytes		
+    if len(file.encode(encoding = 'utf-8')) - 2 > headFormat['fileName']:
+      continue
+    
+    if file.startswith('./A/') or file.startswith('./-/'):
+      files.append(file)
 
-  files = []
+  # dir I stores pictures
   for file in getFiles('.'):
     if len(file.encode(encoding = 'utf-8')) - 2 > headFormat['fileName']:
       continue
     
-    if file.endswith('.html') or file.startswith('./A/') or file.startswith('./-/'):
+    if file.endswith('./I/'):
       files.append(file)
-    
+
+  # upload files to swarm    
   result = uploadToSwarm(files)
+  
+  #print the 'reference' of the files stored in swarm
+  #we can visit the website on https://gateway-proxy-bee-8-0.gateway.ethswarm.org/bzz/reference, remember replace the real reference
   print(result)
                                      
                                      
