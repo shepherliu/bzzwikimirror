@@ -77,7 +77,7 @@ def addHeader(filename, length):
     if len(fileHeader[head]) > 0:
       buffer = buffer + fileHeader[head].encode('utf-8')
     
-    patch = headFormat[head] - len(fileHeader[head])
+    patch = headFormat[head] - len(fileHeader[head].encode('utf-8'))
     
     if patch > 0:
       buffer = buffer + headPatch[0:patch]
