@@ -18,6 +18,7 @@ mv docs/A/index docs/index.html
 
 #modify the index.html to redirect to the correct url
 sed -i 's#url=#url=A/#g' docs/index.html
+sed -i 's#href=\"#href=\"A/#g' docs/index.html
 
 #fix python3 http client encode to utf-8
 sed -i 's#latin-1#utf-8#g' /usr/lib/python3.8/http/client.py
