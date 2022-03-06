@@ -114,7 +114,7 @@ def addMetaFile(filename, length):
   except:
     metadata['type'] = ''
 
-  content = json.dumps(metadata).encode(encoding = 'utf-8')
+  content = json.dumps(metadata, ensure_ascii=False).encode(encoding = 'utf-8')
 
   return [metafile, content]
 
