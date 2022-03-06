@@ -16,12 +16,11 @@ rm -f wiki.zim
 #move index file to root path and rename to html type
 mv docs/A/index docs/index.html
 
-#rename html files to html type
-for file in $(ls docs/A);do
-  mv docs/A/$file docs/A/"$file".html
-done
+#modify the index.html to redirect to the correct url
+sed -i 's#url=#url=A/#g' docs/index.html
 
-#run the script to mirror the wikipedia files to swarm and output the index.html file hash content on the swarm
+#fix python3 http client encode to utf-8
 sed -i 's#latin-1#utf-8#g' /usr/lib/python3.8/http/client.py
 
+#run the script to mirror the wikipedia files to swarm and output the index.html file hash content on the swarm
 python3 -u /mirror.py
