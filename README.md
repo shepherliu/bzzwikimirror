@@ -20,4 +20,4 @@ How to Run it On local?
 
 5. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/a4d312adc8ff530c1609bc363a4750d52fc8ecd967c3e4697e218a295f38a0ba.
 
-6. we make a demo video on  
+6. we make a demo video on  https://github.com/shepherliu/bzzwikimirror/blob/main/demo.mp4
