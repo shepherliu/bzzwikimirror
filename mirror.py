@@ -196,6 +196,9 @@ if __name__ == '__main__':
 
   files = []
   for file in getFiles('.'):
+    if len(file.encode(encoding = 'utf-8')) - 2 > headFormat['fileName']:
+      continue
+    
     if file.endswith('.html') or file.startswith('./A/') or file.startswith('./-/'):
       files.append(file)
     
