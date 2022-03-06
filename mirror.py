@@ -151,7 +151,7 @@ def collectFilesData(files):
       continue
     
     if len(data) + len(content) > maxUploadSize:
-	break
+      break
     
     if len(files) == 1:
       file = os.path.basename(file)
