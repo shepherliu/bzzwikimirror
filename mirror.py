@@ -191,10 +191,13 @@ def uploadToSwarm(files):
 
 if __name__ == '__main__':
   os.chdir(wikipediaDir)
-  files = getFiles('.')
-  print(files)
+
+  files = []
+  for file in getFiles('.'):
+    if file.startswith('./A/') or file.startswith('./-/'):
+	files.append(file)
   
-  result = uploadToSwarm(files[0:1])
+  result = uploadToSwarm(files)
   print(result)
   
                                      
