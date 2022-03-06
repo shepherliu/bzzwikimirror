@@ -14,11 +14,11 @@ How to Run it On local?
 
 3. run the docker image like this, you can also choose the zim file on https://download.kiwix.org/zim/wikipedia, the size of zim file needs less than 10M: 
 
-    docker run ubuntu/bzzwikimirror:v1 https://download.kiwix.org/zim/wikipedia/wikipedia_bm_all_maxi_2022-02.zim 
+    docker run ubuntu/bzzwikimirror:v1 https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_mini_2022-03.zim
 
-4. get the hash content that the docker output after excuting done, the hash content is like this: a4d312adc8ff530c1609bc363a4750d52fc8ecd967c3e4697e218a295f38a0ba
+4. get the hash content that the docker output after excuting done, the hash content is like this: 5db5e9940b5edec5363a8248efbee063c80da25369e0c10bca8e27e9b1e5644a
 
-5. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/a4d312adc8ff530c1609bc363a4750d52fc8ecd967c3e4697e218a295f38a0ba.
+5. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/5db5e9940b5edec5363a8248efbee063c80da25369e0c10bca8e27e9b1e5644a.
 
 6. we make a demo video on  https://github.com/shepherliu/bzzwikimirror/blob/main/demo.mp4
 
@@ -45,4 +45,4 @@ How it Works?
 
    first, we use entry.sh to download the zim file , and decompress it to a folder, and them modify the "./A/index" file to "./index.html", and modify the url in the "index.html" file.
    
-   second, we use a python script to collect the folder files to an application/x-tar collection, and then upload the collection data to swarm gateway, finally we get the reference return by the swarm gateway. Then we can visit our wikipedia website on swarm by the reference. 
+   second, we use a python script to collect the folder files to an application/x-tar collection, and then upload the collection data to swarm gateway, finally we get the reference return by the swarm gateway. Then we can visit our wikipedia website on swarm by the reference. if you get some warong when visit the website on swarm, just refresh the url sometimes.
