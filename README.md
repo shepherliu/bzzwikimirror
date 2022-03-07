@@ -15,6 +15,11 @@ How to Run it On local?
 3. run the docker image like this, you can also choose the zim file on https://download.kiwix.org/zim/wikipedia, the size of zim file needs less than 10M: 
 
     docker run ubuntu/bzzwikimirror:v1 https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_mini_2022-03.zim
+    
+    advantage usage:  docker run ubuntu/bzzwikimirror:v1 [zim_file_url] [your_swarm_gateway_url] [your_swarm_postage_batch_id]
+    
+    if you has your own bee node and run your own swarm gateway proxy on the local, you can just run the docker like this:
+       docker run ubuntu/bzzwikimirror:v1 https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_mini_2022-03.zim http://localhost:3000/bzz f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50   
 
 4. get the hash content that the docker output after excuting done, the hash content is like this: 5db5e9940b5edec5363a8248efbee063c80da25369e0c10bca8e27e9b1e5644a
 
