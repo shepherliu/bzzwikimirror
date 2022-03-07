@@ -1,6 +1,7 @@
 #!/usr/bin/python 
 # -*- coding: utf-8 -*-
 import os
+import sys
 import json
 import time
 import mimetypes
@@ -26,6 +27,8 @@ swarmGateways = [
   'https://gateway-proxy-bee-8-0.gateway.ethswarm.org/bzz',
   'https://gateway-proxy-bee-9-0.gateway.ethswarm.org/bzz'
 ]
+
+swarmPostageBatchId = "0000000000000000000000000000000000000000000000000000000000000000"
 
 #the file header info for application/x-tar, the number is the length of each item should be.
 headFormat = {
@@ -253,6 +256,14 @@ def uploadToSwarm(files):
   return reference
 
 if __name__ == '__main__':
+  # use your own swarm gateway instead	
+  if len(sys.argv) > 1 and len(sys.argv[1]) > 0:
+    swarmGateways = [sys.argv[1]]
+    # if use your own swarm gateway and bee node, the upload size can be large by your own settings, so set it bigger
+    maxUploadSize = 1024*1024*1024
+  # use your own swarm gateway batch id instead	
+  if len(sys.argv) > 2 and len(sys.argv[2]) > 0:
+    swarmPostageBatchId = sys.argv[2]  		
   #change to wiki docs dir	
   os.chdir(wikipediaDir)
   
