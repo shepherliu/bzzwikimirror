@@ -24,4 +24,4 @@ sed -i 's#href=\"#href=\"A/#g' docs/index.html
 sed -i 's#latin-1#utf-8#g' /usr/lib/python3.8/http/client.py
 
 #run the script to mirror the wikipedia files to swarm and output the index.html file hash content on the swarm
-python3 -u /mirror.py
+python3 -u /mirror.py "$2" "$3"
