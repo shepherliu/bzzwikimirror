@@ -28,6 +28,8 @@ How to Run it On local?
 
 5. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/5db5e9940b5edec5363a8248efbee063c80da25369e0c10bca8e27e9b1e5644a.
 
+   if you have your own swarm gateway, remember replace the gateway url of your own.
+
 6. we make a demo video on  https://www.youtube.com/watch?v=C6uQgeA_VPw
 
 
@@ -45,7 +47,7 @@ How it Works?
    
 2. we use the swarm gateway to upload the whole folder files to the swarm, so we can visit the wikipedia docs on the swarm. but we need something to fix.
    
-   first, the swarm gateway has a limit of 10M size to upload. so the zim folder size need a little less than 10M. For that we may drop some pictures to upload.
+   first, the swarm gateway has a limit of 10M size to upload. so the zim folder size need a little less than 10M. For that we may drop some pictures to upload. if you have your own swarm gateway with your own bee node, then the limit will be set to 1G.
    
    second, the swarm surport upload the whole website folder, but the folder must has an index.html so that we can visit it on swarm directly. So that we need move the "./A/index" file to "./" and rename it to "index.html", and we also need to modify the index.html content to change url redirect to "./A/" folder.
    
