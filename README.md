@@ -63,4 +63,4 @@ wiki mirror based on swarm
 
    first, we use entry.sh to download the zim file , and decompress it to a folder, and them modify the "./A/index" file to "./index.html", and modify the url in the "index.html" file.
    
-   second, we use a python script to collect the folder files to an application/x-tar collection, and then upload the collection data to swarm gateway, finally we get the reference return by the swarm gateway. Then we can visit our wikipedia website on swarm by the reference. if you get some wrong when visit the website on swarm, just refresh the url sometimes.
+   second, we use a python script to collect the folder files to an application/x-tar collection, and then upload the collection data to swarm gateway, finally we get the reference return by the swarm gateway. Then we can visit our wikipedia website on swarm by the reference. if you get some wrong when visit the website on swarm, just refresh the url some times.
