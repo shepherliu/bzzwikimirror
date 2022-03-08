@@ -43,7 +43,7 @@ wiki mirror based on swarm
 
 *How it Works?
 
-1. the zim file is a collection of files(html/js/css .etc) of wikipedia docs, we need first download it and decompress it to a local folder.
+1. the wikipedia offline zim file is a collection of files(html/js/css .etc) of wikipedia docs, we can download it and decompress it to a local folder.
 
    the decompressed zim file has tree main subfolder: "./A/", "./I/", "./-/". 
   
@@ -53,7 +53,7 @@ wiki mirror based on swarm
    
    the "./-/" folder stores all the js/css files
    
-2. we use the swarm gateway to upload the whole folder files to the swarm, so we can visit the wikipedia docs on the swarm. but we need something to fix.
+2. we can use the swarm gateway apis to upload the whole folder files to the swarm, then we can visit the wikipedia docs on the swarm. but we need something to fix.
    
    first, the swarm gateway has a limit of 10M size to upload. so the zim folder size need a little less than 10M. For that we may drop some pictures to upload. if you have your own swarm gateway with your own bee node, then the limit will be set to 1G.
    
