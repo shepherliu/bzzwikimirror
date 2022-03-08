@@ -32,6 +32,13 @@ How to Run it On local?
 
 6. we make a demo video on  https://www.youtube.com/watch?v=C6uQgeA_VPw
 
+Tips When You Use This Docker Image:
+   
+   1. For quickly use for everyone, I use the offical swarm gateway as default which has a limit size of upload files that about 10M. So if you choose a zim file more bigger, you need run your own bee node and swarm gateway, other wise, it will drop some pictures and doc files to satisfy the upload limit. 
+   
+   2. When you access the swarm gateway, it may get some erros such as 503 error, just refresh the website for some times. For a better experience, you can run your own swarm gateway on the local.
+   
+   3. The wikipedia website itself may have many outside web links which are not storaged in the zim file. So if you click some of the outside links, the browser will redirect to the new website. Remember that is not a bug of the program, haha!
 
 How it Works?
 
