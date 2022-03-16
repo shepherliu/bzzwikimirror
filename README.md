@@ -25,9 +25,9 @@ wiki mirror based on swarm
     
        docker run ubuntu/bzzwikimirror:v1 https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_mini_2022-03.zim http://localhost:3000/bzz f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50   
 
-4. get the hash content that the docker output after excuting done, the hash content is like this: 5db5e9940b5edec5363a8248efbee063c80da25369e0c10bca8e27e9b1e5644a
+4. get the hash content that the docker output after excuting done, the hash content is like this: c00b9952cf7dc41ba9d2df363a6242188ae12c36391abc4c599220d585f6889c
 
-5. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/5db5e9940b5edec5363a8248efbee063c80da25369e0c10bca8e27e9b1e5644a.
+5. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/c00b9952cf7dc41ba9d2df363a6242188ae12c36391abc4c599220d585f6889c/.
 
    if you have your own swarm gateway, remember replace the gateway url of your own.
 
