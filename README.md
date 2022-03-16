@@ -61,6 +61,8 @@ wiki mirror based on swarm
    
 3. after we have solved these problems, we can use our program in the docker image we build to download the zim file and decompress it and upload the folder to swarm automatic. then use the hash content the swarm return to visit the wikipedia docs on swarm gateway.
 
-   first, we use entry.sh to download the zim file , and decompress it to a folder, and them modify the "./A/index" file to "./index.html", and modify the url in the "index.html" file.
+   first, we use entry.sh to download the zim file , and decompress it to a folder, remove the ./A/index ().
    
-   second, we use a python script to collect the folder files to an application/x-tar collection, and then upload the collection data to swarm gateway, finally we get the reference return by the swarm gateway. Then we can visit our wikipedia website on swarm by the reference. if you get some wrong when visit the website on swarm, just refresh the url some times.
+   second, we will create a new index.html instead in the python script and the index.html will contains all the relative links of all the websites in the zim file.
+   
+   third, we use a python script to collect the folder files to an application/x-tar collection, and then upload the collection data to swarm gateway, finally we get the reference return by the swarm gateway. Then we can visit our wikipedia website on swarm by the reference. if you get some wrong when visit the website on swarm, just refresh the url some times.
