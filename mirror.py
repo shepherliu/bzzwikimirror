@@ -63,11 +63,22 @@ def createIndexHtml(files):
   for file in files:
     if file.startswith('./A/'):
       filename = os.path.basename(file)
-      html = html + '<li style="width:100%; height: auto; word-wrap:break-word; word-break:break-all;"><a></a><a href="A/{0}">{1}</a><a></a></li><a></a>'.format(filename, filename)
+      html = html + '<li style="width:100%; height: auto; word-wrap:break-word; word-break:break-all;"><a></a><a href="A/{0}">{1}</a><a></a></li><a></a>'.format(urllib.parse.quote(filename), filename)
 
   html = html + '</ul></body></html>'
 
   return html.encode('utf-8')
+
+#create index file for search
+def createIndex(files):
+  indexs = []
+
+  for file in files:
+    if file.startswith('./A/'):
+      filename = os.path.basename(file)
+      indexs.append(urllib.parse.quote(filename))
+
+  return json.dumps(indexs).encode('utf-8')
 
 #pad number to fix length in oct
 def pad(num, length):
@@ -200,6 +211,12 @@ def collectFilesData(files):
   sum = sum + len(indexHtml)
   data = appendTarFile(data, 'index.html', indexHtml)
 
+  #add index search second
+  indexSearch = createIndex(files)
+  sum = sum + len(indexSearch)
+  data = appendTarFile(data, 'index', indexSearch)
+
+  #add other files
   for file in files:
     content = open(file, 'rb').read()
 
