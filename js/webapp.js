@@ -46,32 +46,39 @@ async function connect() {
 //get wikipedia references from swarm and blockchain, and refresh the website
 async function refreshWikiPedias(){
 
+  //get index reference from smart contract
   var reference = await getIndexReference();
 
   if(reference == null || reference == undefined || reference == ''){
     return;
   }
 
+  //get index items from swarm
   var indexs = await fetchReferenceFromSwarm(reference);
   if(indexs == null || indexs == undefined){
     return;
   }
 
+  //show wiki doc items on website
   renderForIndexs(indexs);
 }
 
+//add zim index and make a new index file to swarm, then save the reference to smart contract
 async function addReference(hash){
   var isOwner = await isContractOwner();
   if(isOwner == null || isOwner == undefined || isOwner == false){
+    alert("only the smart contract owner can add reference!");
     return;
   }
 
+  //get old index reference
   var reference = await getIndexReference();
 
   if(reference == null || reference == undefined){
     return;
   }
 
+  //get old index items
   var indexs = {};
 
   if(reference != ''){
@@ -81,11 +88,13 @@ async function addReference(hash){
     }
   }
 
+  //get new index items
   var indexForHash = await fetchReferenceFromSwarm(hash)
   if(indexForHash == null || indexForHash == undefined){
     return;
   }
 
+  //add new index items
   indexs[hash] = indexForHash;
 
   //js-tar file collection
@@ -98,11 +107,13 @@ async function addReference(hash){
   var metadata = {"name": "index", "size": totalSize,"type":"text"};
   tar.append(window.META_FILE_NAME, JSON.stringify(metadata));
 
+  //save index items to swarm
   var newHash = await uploadReferenceToSwarm(tar.out);
   if(newHash == null || newHash == undefined){
     return;
   }
 
+  //save new index reference to smart contract
   var res = await setIndexReference(newHash);
   if(res == null || res == undefined){
     return;
@@ -111,23 +122,28 @@ async function addReference(hash){
   }     
 }
 
+//delete zim index and make a new index file to swarm, then save the reference to smart contract
 async function delReference(hash){
   var isOwner = await isContractOwner();
   if(isOwner == null || isOwner == undefined || isOwner == false){
+    alert("only the smart contract owner can delete reference!");
     return;
   }
-    
+   
+  //get old index reference  
   var reference = await getIndexReference();
 
   if(reference == null || reference == undefined || reference == ''){
     return;
   }
 
+  //get old index items
   var indexs = await fetchReferenceFromSwarm(reference)
   if(indexs == null || indexs == undefined){
     return;
   } 
 
+  //delete items for one zim reference
   delete indexs[hash];
 
   //js-tar file collection
@@ -140,11 +156,13 @@ async function delReference(hash){
   var metadata = {"name": "index", "size": totalSize, "type":"text"};
   tar.append(window.META_FILE_NAME, JSON.stringify(metadata));
 
+  //save new index items to swarm
   var newHash = await uploadReferenceToSwarm(tar.out);
   if(newHash == null || newHash == undefined){
     return;
   }
-
+  
+  //save new index reference to swarm
   var res = await setIndexReference(newHash);
   if(res == null || res == undefined){
     return;
@@ -153,6 +171,7 @@ async function delReference(hash){
   }
 }
 
+//render the webpage
 async function renderForIndexs(indexs){
 
   window.indexs = indexs;
@@ -161,6 +180,8 @@ async function renderForIndexs(indexs){
 
 }
 
+
+//add zim index and make a new index file to swarm, then save the reference to smart contract
 async function onAddReference(){
   var reference = prompt("Reference", "");
   if(reference == null || reference == undefined || reference == ''){
@@ -170,6 +191,7 @@ async function onAddReference(){
   await addReference(reference);
 }
 
+//delete zim index and make a new index file to swarm, then save the reference to smart contract
 async function onDeleteReference() {
   var reference = prompt("Reference", "");
   if(reference == null || reference == undefined || reference == ''){
@@ -179,6 +201,7 @@ async function onDeleteReference() {
   await delReference(reference);
 }
 
+//filter wiki doc items
 async function onSearchWiki(){
 
   if(window.indexs == null || window.indexs == undefined){
@@ -190,14 +213,19 @@ async function onSearchWiki(){
   var html = '<ul id="list">';
 
   for(var k in window.indexs){
-    for(var v in window.indexs[k]){
-      var item = unescape(window.indexs[k][v]);
-      if(search == '' || item.indexOf(search) !=-1 ){
+    try{
+        for(var v in window.indexs[k]){
+        var item = unescape(window.indexs[k][v]);
+        if(search == '' || item.indexOf(search) !=-1 ){
 
-        html += '<li style="width:200px;float:left;margin-right:150px;line-height:30px;; word-wrap:break-word; word-break:break-all;"><a></a><a target="_blank" href="' + window.swarmGateway + k +'/A/'+window.indexs[k][v]+'">'+item+'</a><a></a></li><a></a>';
+          html += '<li style="width:200px;float:left;margin-right:150px;line-height:30px;; word-wrap:break-word; word-break:break-all;"><a></a><a target="_blank" href="' + window.swarmGateway + k +'/A/'+window.indexs[k][v]+'">'+item+'</a><a></a></li><a></a>';
 
+        }
       }
+    }catch(e){
+
     }
+
   }
 
   html += '</ul>';
