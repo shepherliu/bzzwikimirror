@@ -39,7 +39,7 @@ wiki mirror based on swarm
 
     3. for the smart contract owner, we can use "add" and "delete" function to add reference we got from the docker command to expand the wiki items. 
 
-8. we make a demo video on  https://www.youtube.com/watch?v=C6uQgeA_VPw
+8. we make demo videos on https://www.youtube.com/watch?v=C6uQgeA_VPw and simple search dapp https://www.youtube.com/watch?v=mnjU3PXkUBk
 
 *Tips When You Use This Docker Image:
    
