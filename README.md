@@ -13,7 +13,7 @@ wiki mirror based on swarm
    
     cd bzzwikimirror && docker build -t ubuntu/bzzwikimirror:v1 .
 
-3. run the docker image like this, you can also choose the zim file on https://download.kiwix.org/zim/wikipedia, the size of zim file needs less than 10M: 
+4. run the docker image like this, you can also choose the zim file on https://download.kiwix.org/zim/wikipedia, the size of zim file needs less than 10M: 
 
     docker run ubuntu/bzzwikimirror:v1 https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_mini_2022-03.zim
     
@@ -25,13 +25,18 @@ wiki mirror based on swarm
     
        docker run ubuntu/bzzwikimirror:v1 https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_mini_2022-03.zim http://localhost:3000/bzz f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50   
 
-4. get the hash content that the docker output after excuting done, the hash content is like this: c00b9952cf7dc41ba9d2df363a6242188ae12c36391abc4c599220d585f6889c
+5. get the hash content that the docker output after excuting done, the hash content is like this: c00b9952cf7dc41ba9d2df363a6242188ae12c36391abc4c599220d585f6889c
 
-5. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/c00b9952cf7dc41ba9d2df363a6242188ae12c36391abc4c599220d585f6889c/.
+6. then you can visit Wikimedia docs on the swarm, just replace the hash content as real output: https://gateway-proxy-bee-1-0.gateway.ethswarm.org/bzz/c00b9952cf7dc41ba9d2df363a6242188ae12c36391abc4c599220d585f6889c/.
 
    if you have your own swarm gateway, remember replace the gateway url of your own.
+   
+7. The long term goal is to have a better Wikipedia on Swarm, so we try to make a simple dapp to to collect and search wikidocs on swarm. you can visit https://bah5acgzaxnrpznbq4poff4nw5dwpupzc7qhptsyhdjrymryygbwcryvebzpq.bzz.link/ and connect to the metamask to use this function. Be sure you are use the goerli network.
+    1. open the website and connect to the metamask, then it will show all the docs link on the web, and then we can use search to filter then.
 
-6. we make a demo video on  https://www.youtube.com/watch?v=C6uQgeA_VPw
+    2. for the smart contract owner, we can use "add" and "delete" function to add reference we got from the docker command to expand the wiki items. 
+
+8. we make a demo video on  https://www.youtube.com/watch?v=C6uQgeA_VPw
 
 *Tips When You Use This Docker Image:
    
