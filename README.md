@@ -31,10 +31,13 @@ wiki mirror based on swarm
 
    if you have your own swarm gateway, remember replace the gateway url of your own.
    
-7. The long term goal is to have a better Wikipedia on Swarm, so we try to make a simple dapp to to collect and search wikidocs on swarm. you can visit https://bah5acgzaxnrpznbq4poff4nw5dwpupzc7qhptsyhdjrymryygbwcryvebzpq.bzz.link/ and connect to the metamask to use this function. Be sure you are use the goerli network.
-    1. open the website and connect to the metamask, then it will show all the docs link on the web, and then we can use search to filter then.
+7. The long term goal is to have a better Wikipedia on Swarm, so we try to make a simple dapp to to "Collect" and "Search" wikidocs on swarm.
 
-    2. for the smart contract owner, we can use "add" and "delete" function to add reference we got from the docker command to expand the wiki items. 
+    1. open https://gateway.ethswarm.org/ and upload this project folder as a website, then you can get a bzz link. or you can visit the website we have built https://bah5acgzaxnrpznbq4poff4nw5dwpupzc7qhptsyhdjrymryygbwcryvebzpq.bzz.link/.
+    
+    2. open the website and connect to the metamask, Be sure you are use the goerli network. then it will show all the docs link on the web, and then we can use search to filter then.
+
+    3. for the smart contract owner, we can use "add" and "delete" function to add reference we got from the docker command to expand the wiki items. 
 
 8. we make a demo video on  https://www.youtube.com/watch?v=C6uQgeA_VPw
 
