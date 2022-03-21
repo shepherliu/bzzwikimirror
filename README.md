@@ -33,7 +33,7 @@ wiki mirror based on swarm
    
 7. The long term goal is to have a better Wikipedia on Swarm, so we try to make a simple dapp to to "Collect" and "Search" wikidocs on swarm.
 
-    1. open https://gateway.ethswarm.org/ and upload this project folder as a website, then you can get a bzz link. or you can visit the website we have built https://bah5acgzaxnrpznbq4poff4nw5dwpupzc7qhptsyhdjrymryygbwcryvebzpq.bzz.link/.
+    1. open https://gateway.ethswarm.org/ and upload this project folder as a website, then you can get a bzz link. or you can visit the website we have built https://bah5acgzaxq3hnvf4hhw57ekkryzpnq6kxdml7tsxq4bar6unrdxwu6jpn4rq.bzz.link/.
     
     2. open the website and connect to the metamask, Be sure you are use the goerli network. then it will show all the docs link on the web, and then we can use search to filter then.
 
