@@ -215,7 +215,7 @@ async function onSearchWiki(){
   for(var k in window.indexs){
     try{
         for(var v in window.indexs[k]){
-        var item = unescape(window.indexs[k][v]);
+        var item = decodeURIComponent(window.indexs[k][v]);
         if(search == '' || item.indexOf(search) !=-1 ){
 
           html += '<li style="width:200px;float:left;margin-right:150px;line-height:30px;; word-wrap:break-word; word-break:break-all;"><a></a><a target="_blank" href="' + window.swarmGateway + k +'/A/'+window.indexs[k][v]+'">'+item+'</a><a></a></li><a></a>';
