@@ -176,7 +176,7 @@ def extract_wikipedia_zim(name, src, dst, fs, podname = POD_NAME, tablename = TA
 	if os.path.exists(dstpath):
 		os.removedirs(dstpath)
 
-	cmd = './zim-tools_linux-x86_64-3.1.1/zimdump dump --dir={0} {1} | grep -v -E --line-buffered "Wrote "'.format(dstpath, srcpath)
+	cmd = '~/zim-tools_linux-x86_64-3.1.1/zimdump dump --dir={0} {1} | grep -v -E --line-buffered "Wrote "'.format(dstpath, srcpath)
 	res = subprocess.Popen(cmd, shell = True, stdout = None, stderr = None).wait()
 
 	if res != 0:
