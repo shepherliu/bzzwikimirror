@@ -176,7 +176,7 @@ def extract_wikipedia_zim(name, src, dst, fs, podname = POD_NAME, tablename = TA
 	if os.path.exists(dstpath):
 		os.removedirs(dstpath)
 
-	cmd = '~/zim-tools_linux-x86_64-3.1.1/zimdump dump --dir={0} {1} | grep -v -E --line-buffered "Wrote "'.format(dstpath, srcpath)
+	cmd = '~/zim-tools_linux-x86_64-3.1.1/zimdump dump --dir={0} {1}'.format(dstpath, srcpath)
 	res = subprocess.Popen(cmd, shell = True, stdout = None, stderr = None).wait()
 
 	if res != 0:
@@ -187,7 +187,7 @@ def extract_wikipedia_zim(name, src, dst, fs, podname = POD_NAME, tablename = TA
 
 def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
-	fs.put_key_value(podname, tablename, name, UPLOADING_STATUS)
+	fs.put_key_value(podname, tablename, name, ENHANCING_STATUS)
 
 	res = fs.get_value(podname, tablename, name)
 
@@ -197,7 +197,7 @@ def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_
 	if len(res['data']['values']) < 1:
 		return False
 
-	if res['data']['values'] == UPLOADING_STATUS:
+	if res['data']['values'] == ENHANCING_STATUS:
 		return True
 
 	return False
