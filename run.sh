@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-docker-compose stop
-docker-compose start
+docker-compose down
+docker-compose up -d
