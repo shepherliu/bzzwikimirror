@@ -31,7 +31,6 @@ TABLE_INDEX = 'index_status'
 
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
-ENHANCING_STATUS = "enhancing"
 UPLOADING_STATUS = "uploading"
 
 

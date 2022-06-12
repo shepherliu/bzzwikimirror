@@ -30,7 +30,6 @@ TABLE_INDEX = 'index_status'
 
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
-ENHANCING_STATUS = "enhancing"
 UPLOADING_STATUS = "uploading"
 
 
@@ -298,9 +297,6 @@ if __name__ == '__main__':
 				logging.info(f"zim: {name} status now is {status}")
 				break
 			elif status == EXTRACTING_STATUS:
-				logging.info(f"zim: {name} status now is {status}")
-				break
-			elif status == ENHANCING_STATUS:
 				logging.info(f"zim: {name} status now is {status}")
 				break
 			elif status.startswith(UPLOADING_STATUS):

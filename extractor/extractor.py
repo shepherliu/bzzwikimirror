@@ -31,7 +31,6 @@ TABLE_INDEX = 'index_status'
 
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
-ENHANCING_STATUS = "enhancing"
 UPLOADING_STATUS = "uploading"
 
 
@@ -187,7 +186,7 @@ def extract_wikipedia_zim(name, src, dst, fs, podname = POD_NAME, tablename = TA
 
 def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
-	fs.put_key_value(podname, tablename, name, ENHANCING_STATUS)
+	fs.put_key_value(podname, tablename, name, UPLOADING_STATUS)
 
 	res = fs.get_value(podname, tablename, name)
 
@@ -197,7 +196,7 @@ def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_
 	if len(res['data']['values']) < 1:
 		return False
 
-	if res['data']['values'] == ENHANCING_STATUS:
+	if res['data']['values'] == UPLOADING_STATUS:
 		return True
 
 	return False
