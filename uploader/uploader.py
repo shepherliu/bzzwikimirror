@@ -182,7 +182,7 @@ if __name__ == '__main__':
 	version = FAIROS_VERSION
 	user = ''
 	password = ''
-	dirs = '/tmp/wikipedia/zim'
+	dirs = '/tmp/wikipedia/doc'
 
 	try:
 		opts, args = getopt.getopt(argv, "h:v:u:p:d:", [

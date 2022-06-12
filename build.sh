@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+currentPath=$(pwd)
+
+#build trigger
+cd $currentPath
+cd trigger
+
+docker build -t bzzwikimirror/trigger:latest .
+
+#build downloader
+cd $currentPath
+cd downloader
+
+docker build -t bzzwikimirror/downloader:latest .
+
+#build extractor
+cd $currentPath
+cd extractor
+
+docker build -t bzzwikimirror/extractor:latest .
+
+#build uploader
+cd $currentPath
+cd uploader
+
+docker build -t bzzwikimirror/uploader:latest .
+
+#build httpserver
+cd $currentPath
+cd httpserver
+
+npm install && npm run build && docker build -t bzzwikimirror/httpserver:latest .
