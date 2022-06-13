@@ -34,5 +34,5 @@ services:
       - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"
     command: python3 httpserver.py -h 135.125.156.65:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
 
-  volumes:
-    bzzwikimirror:
+volumes:
+  bzzwikimirror:
