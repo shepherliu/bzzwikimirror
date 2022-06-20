@@ -4,35 +4,35 @@ services:
   bzzwikimirror-trigger:
     image: bzzwikimirror/trigger:latest
     restart: unless-stopped
-    command: python3 trigger.py -h 135.125.156.65:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
+    command: python3 trigger.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
 
   bzzwikimirror-downloader:
     image: bzzwikimirror/downloader:latest
     restart: unless-stopped
     volumes:
       - bzzwikimirror: /tmp
-    command: python3 downloader.py -h 135.125.156.65:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
+    command: python3 downloader.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
 
   bzzwikimirror-extractor:
     image: bzzwikimirror/extractor:latest
     restart: unless-stopped
     volumes:
       - bzzwikimirror: /tmp
-    command: python3 extractor.py -h 135.125.156.65:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
+    command: python3 extractor.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
 
   bzzwikimirror-uploader:
     image: bzzwikimirror/uploader:latest
     restart: unless-stopped
     volumes:
       - bzzwikimirror: /tmp
-    command: python3 uploader.py -h 135.125.156.65:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
+    command: python3 uploader.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
 
   bzzwikimirror-httpserver:
     image: bzzwikimirror/httpserver:latest
     restart: unless-stopped
     ports:
       - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"
-    command: python3 httpserver.py -h 135.125.156.65:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
+    command: python3 httpserver.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
 
 volumes:
   bzzwikimirror:
