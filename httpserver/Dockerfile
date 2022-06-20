@@ -11,4 +11,4 @@ RUN cd ~ \
 
 COPY httpserver.py httpserver.py
 
-ENTRYPOINT ["sh", "httpserver.py"]
+ENTRYPOINT ["python3", "/httpserver.py"]

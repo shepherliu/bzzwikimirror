@@ -11,4 +11,4 @@ RUN cd ~ \
 
 COPY trigger.py trigger.py
 
-ENTRYPOINT ["sh", "trigger.py"]
+ENTRYPOINT ["python3", "/trigger.py"]

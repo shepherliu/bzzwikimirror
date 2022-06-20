@@ -11,4 +11,4 @@ RUN cd ~ \
 
 COPY downloader.py downloader.py
 
-ENTRYPOINT ["sh", "downloader.py"]
+ENTRYPOINT ["python3", "/downloader.py"]

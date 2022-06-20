@@ -14,4 +14,4 @@ RUN cd ~ \
 
 COPY extractor.py extractor.py
 
-ENTRYPOINT ["sh", "extractor.py"]
+ENTRYPOINT ["python3", "/extractor.py"]

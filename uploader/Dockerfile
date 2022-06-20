@@ -11,4 +11,4 @@ RUN cd ~ \
 
 COPY uploader.py uploader.py
 
-ENTRYPOINT ["sh", "uploader.py"]
+ENTRYPOINT ["python3", "/uploader.py"]
