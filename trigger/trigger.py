@@ -10,6 +10,7 @@ import getopt
 import enum
 import logging
 import urllib.parse
+import hashlib
 
 from fairos.fairos import Fairos
 
@@ -279,7 +280,7 @@ if __name__ == '__main__':
 
 			name, size, timestamp = d
 
-			keyname = urllib.parse.quote(name)
+			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
 			status, err = check_zim_status(keyname, fs)
 

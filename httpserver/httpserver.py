@@ -11,6 +11,7 @@ import logging
 import mimetypes
 import requests
 import urllib.parse
+import hashlib
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -113,7 +114,7 @@ class Resquest(BaseHTTPRequestHandler):
 
 	#get zim file status
 	def getZimFileStatus(self, name:str):
-		keyname = urllib.parse.quote(name)
+		keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 		status = {
 			name: check_zim_status(keyname, fs)
 		}

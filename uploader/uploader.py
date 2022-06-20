@@ -124,7 +124,7 @@ def upload_files(name:str, dirs:str, timestamp:int, fs, podname = POD_NAME):
 
 def check_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablename = TABLE_FILE):
 
-	keyname = urllib.parse.quote(filepath)	
+	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
 
 	res = fs.get_value(podname, tablename, keyname)
 
@@ -138,7 +138,7 @@ def check_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablenam
 
 def update_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablename = TABLE_FILE):
 
-	keyname = urllib.parse.quote(filepath)	
+	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
 
 	fs.put_key_value(podname, tablename, keyname, md5sum)
 
@@ -156,10 +156,11 @@ def update_wikipedia_zim_status(name:str, timestamp:int, fs, podname = POD_NAME,
 
 	res = fs.open_table(podname, tablename)
 	if res['message'] != 'success':
-		logging.error(f"open fairos table: {tablename}" error: {res['message']})
+		logging.error(f"open fairos table: {tablename} error: {res['message']}")
 		return False
 
-	keyname = urllib.parse.quote(name)	
+	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
+	
 	fs.put_key_value(podname, tablename, keyname, str(timestamp))
 
 	res = fs.get_value(podname, tablename, keyname)
@@ -223,7 +224,7 @@ if __name__ == '__main__':
 
 			name, size, timestamp = d
 
-			keyname = urllib.parse.quote(name)
+			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
 			status, err = check_zim_status(keyname, fs)
 

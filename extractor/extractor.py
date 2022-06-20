@@ -11,6 +11,7 @@ import enum
 import logging
 import urllib.parse
 import subprocess
+import hashlib
 
 from fairos.fairos import Fairos
 
@@ -181,7 +182,8 @@ def extract_wikipedia_zim(name, src, dst, fs, podname = POD_NAME, tablename = TA
 	if res != 0:
 		return False
 
-	keyname = urllib.parse.quote(name)
+	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
+
 	return update_wikipedia_zim_status(keyname, fs, podname, tablename)
 
 def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
@@ -260,7 +262,7 @@ if __name__ == '__main__':
 
 			name, size, timestamp = d
 
-			keyname = urllib.parse.quote(name)
+			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
 			status, err = check_zim_status(keyname, fs)
 
