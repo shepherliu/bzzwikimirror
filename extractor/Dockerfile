@@ -10,7 +10,7 @@ RUN cd ~ \
     && git clone https://github.com/shepherliu/FairOsTools.git \
     && cd FairOsTools \
     && python3 setup.py install \
-    && cd ~ \
+    && cd ~
 
 COPY extractor.py extractor.py
 
