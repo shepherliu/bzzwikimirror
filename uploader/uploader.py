@@ -160,7 +160,7 @@ def update_wikipedia_zim_status(name:str, timestamp:int, fs, podname = POD_NAME,
 		return False
 
 	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
-	
+
 	fs.put_key_value(podname, tablename, keyname, str(timestamp))
 
 	res = fs.get_value(podname, tablename, keyname)
@@ -175,6 +175,43 @@ def update_wikipedia_zim_status(name:str, timestamp:int, fs, podname = POD_NAME,
 		return True
 
 	return False	
+
+#parse timestamp
+def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
+
+	t = time.strptime(timestamp, timeformat)
+
+	return int(time.mktime(t))
+
+#get wiki zim list
+def get_wikipedia_dumps(host = WIKIPEDIA_HOST):
+
+	res = requests.get(host)
+
+	if res.status_code >= 200 and res.status_code < 300:
+		regexp = r'\>(wikipedia\S{1,}\.zim)\<\S{1,}\s{1,}(\S{1,}\s{1,}\S{1,})\s{1,}(\d{1,})'
+		return re.findall(regexp, res.text)
+	else:
+		logging.error(f"get wikipedia dumps error: {res.text}")
+
+	return None
+
+#parse wiki dumps
+def parse_wikipedia_dumps(data = []):
+
+	res = []
+
+	if data is None:
+
+		return res
+
+	for d in data:
+
+		name, timestamp, size = d
+
+		res.append([name, size, parse_timestamp(timestamp)])
+	
+	return sorted(res, key = lambda x: x[2])	
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
