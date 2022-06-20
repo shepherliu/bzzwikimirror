@@ -176,6 +176,31 @@ def update_wikipedia_zim_status(name:str, timestamp:int, fs, podname = POD_NAME,
 
 	return False	
 
+#check zim status
+def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
+
+	keyPresent = False
+	
+	res = fs.key_present(podname, tablename, name)
+	if res['message'] != 'success':
+		return (None, ret['message'])
+
+	keyPresent = res['data']['present']
+	if not keyPresent:
+		return (None, 'success')
+
+	res = fs.get_value(podname, tablename, name)
+	if res['message'] != 'success':
+		return (None, ret['message'])
+
+	if res['data']['values'] is None:
+		return (None, 'success')
+
+	try:
+		return (int(res['data']['values']), 'success')
+	except:
+		return (res['data']['values'], 'success')	
+
 #parse timestamp
 def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
 
