@@ -57,7 +57,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 		res = fs.signup_user(username, password)
 
 		if res['message'] != 'success':
-			logging.error(f"signup user: {username} error: {ret['message']}")
+			logging.error(f"signup user: {username} error: {res['message']}")
 			return None
 		else:
 			logging.info(f"signup user: {username} success")
@@ -66,7 +66,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.login_user(username, password)
 
 	if res['message'] != 'success':
-		logging.error(f"login user: {username} error: {ret['message']}")
+		logging.error(f"login user: {username} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"login user: {username} success")
@@ -77,7 +77,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.pod_present(podname)
 
 	if res['message'] != 'success':
-		logging.error(f"get pod: {podname} status error: {ret['message']}")
+		logging.error(f"get pod: {podname} status error: {res['message']}")
 		return None
 	else:
 		podPresent = res['data']['present']
@@ -88,7 +88,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 		res = fs.new_pod(podname)
 
 		if res['message'] != 'success':
-			logging.error(f"create new pod: {podname} error: {ret['message']}")
+			logging.error(f"create new pod: {podname} error: {res['message']}")
 			return None
 		else:
 			logging.info(f"create new pod: {podname} success")
@@ -97,30 +97,30 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.open_pod(podname)
 
 	if res['message'] != 'success':
-		logging.error(f"open pod: {podname} error: {ret['message']}")
+		logging.error(f"open pod: {podname} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"open pod: {podname} success")
 
 	res = fs.create_new_table(podname, TABLE_ZIM)
 	if res['message'] != 'success' and res['message'].find('already') == -1:
-		logging.error(f"create new table: {TABLE_ZIM} error: {ret['message']}")
+		logging.error(f"create new table: {TABLE_ZIM} error: {res['message']}")
 		return None
 
 	res = fs.create_new_table(podname, TABLE_FILE)
 	if res['message'] != 'success' and res['message'].find('already') == -1:
-		logging.error(f"create new table: {TABLE_FILE} error: {ret['message']}")
+		logging.error(f"create new table: {TABLE_FILE} error: {res['message']}")
 		return None
 
 	res = fs.create_new_table(podname, TABLE_INDEX)
 	if res['message'] != 'success' and res['message'].find('already') == -1:
-		logging.error(f"create new table: {TABLE_INDEX} error: {ret['message']}")
+		logging.error(f"create new table: {TABLE_INDEX} error: {res['message']}")
 		return None		
 	#open table
 	res = fs.open_table(podname, tablename)
 
 	if res['message'] != 'success':
-		logging.error(f"open table: {tablename} error: {ret['message']}")
+		logging.error(f"open table: {tablename} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"open table: {tablename} success")
@@ -201,7 +201,7 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 	
 	res = fs.key_present(podname, tablename, name)
 	if res['message'] != 'success':
-		return (None, ret['message'])
+		return (None, res['message'])
 
 	keyPresent = res['data']['present']
 	if not keyPresent:
@@ -209,7 +209,7 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	res = fs.get_value(podname, tablename, name)
 	if res['message'] != 'success':
-		return (None, ret['message'])
+		return (None, res['message'])
 
 	if res['data']['values'] is None:
 		return (None, 'success')

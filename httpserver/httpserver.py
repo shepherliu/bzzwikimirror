@@ -140,7 +140,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.login_user(username, password)
 
 	if res['message'] != 'success':
-		logging.error(f"login user: {username} error: {ret['message']}")
+		logging.error(f"login user: {username} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"login user: {username} success")
@@ -149,7 +149,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.open_pod(podname)
 
 	if res['message'] != 'success':
-		logging.error(f"open pod: {podname} error: {ret['message']}")
+		logging.error(f"open pod: {podname} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"open pod: {podname} success")
@@ -158,7 +158,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.open_table(podname, tablename)
 
 	if res['message'] != 'success':
-		logging.error(f"open table: {tablename} error: {ret['message']}")
+		logging.error(f"open table: {tablename} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"open table: {tablename} success")

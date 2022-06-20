@@ -45,7 +45,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.login_user(username, password)
 
 	if res['message'] != 'success':
-		logging.error(f"login user: {username} error: {ret['message']}")
+		logging.error(f"login user: {username} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"login user: {username} success")
@@ -54,7 +54,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.open_pod(podname)
 
 	if res['message'] != 'success':
-		logging.error(f"open pod: {podname} error: {ret['message']}")
+		logging.error(f"open pod: {podname} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"open pod: {podname} success")
@@ -63,7 +63,7 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	res = fs.open_table(podname, tablename)
 
 	if res['message'] != 'success':
-		logging.error(f"open table: {tablename} error: {ret['message']}")
+		logging.error(f"open table: {tablename} error: {res['message']}")
 		return None
 	else:
 		logging.info(f"open table: {tablename} success")
@@ -144,7 +144,7 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 	
 	res = fs.key_present(podname, tablename, name)
 	if res['message'] != 'success':
-		return (None, ret['message'])
+		return (None, res['message'])
 
 	keyPresent = res['data']['present']
 	if not keyPresent:
@@ -152,7 +152,7 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	res = fs.get_value(podname, tablename, name)
 	if res['message'] != 'success':
-		return (None, ret['message'])
+		return (None, res['message'])
 
 	if res['data']['values'] is None:
 		return (None, 'success')
