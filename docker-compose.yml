@@ -10,22 +10,22 @@ services:
     image: bzzwikimirror/downloader:latest
     restart: unless-stopped
     volumes:
-      - bzzwikimirror: /tmp
-    command: python3 downloader.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
+      - bzzwikimirror: /home
+    command: python3 downloader.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /home/wikipedia/zim
 
   bzzwikimirror-extractor:
     image: bzzwikimirror/extractor:latest
     restart: unless-stopped
     volumes:
-      - bzzwikimirror: /tmp
-    command: python3 extractor.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
+      - bzzwikimirror: /home
+    command: python3 extractor.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /home/wikipedia/zim -d /home/wikipedia/doc
 
   bzzwikimirror-uploader:
     image: bzzwikimirror/uploader:latest
     restart: unless-stopped
     volumes:
-      - bzzwikimirror: /tmp
-    command: python3 uploader.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
+      - bzzwikimirror: /home
+    command: python3 uploader.py -h 141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /home/wikipedia/doc
 
   bzzwikimirror-httpserver:
     image: bzzwikimirror/httpserver:latest
