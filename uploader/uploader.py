@@ -76,7 +76,7 @@ def upload_files(name:str, dirs:str, timestamp:int, fs, podname = POD_NAME):
 
 	res = fs.open_table(podname, TABLE_FILE)
 	if res['message'] != 'success':
-		logging.error(f"open fairos table: {TABLE_FILE}" error: {res['message']})
+		logging.error(f"open fairos table: {TABLE_FILE} error: {res['message']}")
 		return False
 
 	for root, dirs, files in os.walk(path):

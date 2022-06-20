@@ -293,8 +293,7 @@ if __name__ == '__main__':
 			root = arg
 
 	if not os.path.exists(root):
-		logging.error(f"root path: {root} not exists")
-		sys.exit(-1)
+		os.makedirs(root)
 
 	fs = init_fairos(user, password, host, version)
 	if fs is None:
