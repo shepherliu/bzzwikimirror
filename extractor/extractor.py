@@ -162,6 +162,7 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 	except:
 		return (res['data']['values'], 'success')
 
+#extract zim file to dst dirs using zimdump
 def extract_wikipedia_zim(name, src, dst, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	srcpath = os.path.join(src, name)
@@ -186,6 +187,7 @@ def extract_wikipedia_zim(name, src, dst, fs, podname = POD_NAME, tablename = TA
 
 	return update_wikipedia_zim_status(keyname, fs, podname, tablename)
 
+#update zim file status to UPLOADING_STATUS
 def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	fs.put_key_value(podname, tablename, name, UPLOADING_STATUS)
@@ -213,6 +215,7 @@ if __name__ == '__main__':
 	src = '/tmp/wikipedia/zim'
 	dst = '/tmp/wikipedia/doc'
 
+	#parse agrs
 	try:
 		opts, args = getopt.getopt(argv, "h:v:u:p:d:s:", [
 			"host=",
@@ -240,6 +243,7 @@ if __name__ == '__main__':
 		elif opt in ['--dst', '-d']:
 			dst = arg
 
+	#make dst dirs
 	try:
 		os.makedirs(dst)
 	except:
@@ -258,6 +262,7 @@ if __name__ == '__main__':
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
 		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
 
+		#check zim file one by one based on the zim timestamp from oldest to newest
 		for d in dumps:
 
 			name, size, timestamp = d
@@ -276,8 +281,9 @@ if __name__ == '__main__':
 				else:
 					logging.warning(f"extract zim: {name} to {dst} failed")
 				break
+			elif status is None:
+				break
 			else:
-				logging.info(f"zim: {name} status now is {status}")
 				continue
 
 		time.sleep(300)

@@ -162,6 +162,7 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 	except:
 		return (res['data']['values'], 'success')
 
+#download zim file from the wikidumps website
 def download_wikipedia_zim(name, dirs, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	filepath = os.path.join(dirs, name)
@@ -195,6 +196,7 @@ def download_wikipedia_zim(name, dirs, fs, podname = POD_NAME, tablename = TABLE
 	
 	return update_wikipedia_zim_status(keyname, fs, podname, tablename)
 
+#update wiki zim file status to EXTRACTING_STATUS
 def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	fs.put_key_value(podname, tablename, name, EXTRACTING_STATUS)
@@ -221,6 +223,7 @@ if __name__ == '__main__':
 	password = ''
 	dirs = '/tmp/wikipedia/zim'
 
+	#parse args
 	try:
 		opts, args = getopt.getopt(argv, "h:v:u:p:d:", [
 			"host=",
@@ -245,6 +248,7 @@ if __name__ == '__main__':
 		elif opt in ['--dirs', '-d']:
 			dirs = arg
 
+	#make download dirs
 	try:
 		os.makedirs(dirs)
 	except:
@@ -263,6 +267,7 @@ if __name__ == '__main__':
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
 		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
 
+		#check zim file one by one based on the zim timestamp from oldest to newest
 		for d in dumps:
 
 			name, size, timestamp = d
@@ -281,8 +286,9 @@ if __name__ == '__main__':
 				else:
 					logging.warning(f"download zim: {name} to {dirs} failed")
 				break
+			elif status is None:
+				break
 			else:
-				logging.info(f"zim: {name} status now is {status}")
 				continue
 
 		time.sleep(300)

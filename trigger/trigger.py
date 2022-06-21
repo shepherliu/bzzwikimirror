@@ -219,6 +219,7 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 	except:
 		return (res['data']['values'], 'success')
 
+#update zim file status to DOWNLOADING_STATUS
 def trigger_wikipedia_update(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	fs.put_key_value(podname, tablename, name, DOWNLOADING_STATUS)
@@ -244,6 +245,7 @@ if __name__ == '__main__':
 	user = ''
 	password = ''
 
+	#parse args
 	try:
 		opts, args = getopt.getopt(argv, "h:v:u:p:", [
 			"host=",
@@ -276,6 +278,7 @@ if __name__ == '__main__':
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
 		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
 
+		#check zim file one by one based on the zim timestamp from oldest to newest
 		for d in dumps:
 
 			name, size, timestamp = d

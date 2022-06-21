@@ -68,17 +68,20 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	
 	return fs
 
+#upload all files of the dirs to fairos
 def upload_files(name:str, dirs:str, timestamp:int, fs, podname = POD_NAME):
 	totalcnt = 0
 	filelist = []
 
 	path = os.path.join(dirs, name.split('.')[0])
 
+	#table to mark file status
 	res = fs.open_table(podname, TABLE_FILE)
 	if res['message'] != 'success':
 		logging.error(f"open fairos table: {TABLE_FILE} error: {res['message']}")
 		return False
 
+	#collect file list for the dir
 	for root, dirs, files in os.walk(path):
 		relpath = os.path.relpath(root, path)
 		relpath = os.path.join('/', relpath)
@@ -99,29 +102,41 @@ def upload_files(name:str, dirs:str, timestamp:int, fs, podname = POD_NAME):
 			filepath = os.path.join(root, file)
 			filelist.append(filepath)
 
+	#upload file list
 	for filepath in filelist:
+		#check if already upload or not
 		md5sum = ''
 		with open(filepath, 'rb') as f:
 			md5sum = hashlib.md5(f.read()).hexdigest()
 		if check_file_status(filepath, md5sum, fs, podname, TABLE_FILE):
 			continue
-		res = fs.upload_file(podname, relpath, filepath)
-		if res['message'] != 'success':
-			logging.error(f"upload fairos file: {filepath} error: {res['message']}")
-			continue
-		if update_file_status(filepath, md5sum, fs, podname, TABLE_FILE) == False:
-			logging.error(f"update fairos file: {filepath} status failed")
-			continue
-		else:
-			totalcnt += 1
-			logging.info(f"upload fairos file: {filepath} success, total process: {totalcnt}/{len(filelist)}")
-			continue
 
+		#upload file until it is success
+		while True:
+			res = fs.upload_file(podname, relpath, filepath)
+			if res['message'] != 'success':
+				logging.error(f"upload fairos file: {filepath} error: {res['message']}")
+				continue
+			else:
+				break
+
+		#update file status until it is success
+		while True:
+			if update_file_status(filepath, md5sum, fs, podname, TABLE_FILE) == False:
+				logging.error(f"update fairos file: {filepath} status failed")
+				continue
+			else:
+				totalcnt += 1
+				logging.info(f"upload fairos file: {filepath} success, total process: {totalcnt}/{len(filelist)}")
+				break
+
+	#if all files upload success, update the status of the zim file status
 	if totalcnt < len(filelist):
 		return False
 	else:
 		return update_wikipedia_zim_status(name, timestamp, fs, podname, TABLE_ZIM)
 
+#check file status
 def check_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablename = TABLE_FILE):
 
 	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
@@ -136,6 +151,7 @@ def check_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablenam
 
 	return res['data']['values'] == md5sum
 
+#update file status
 def update_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablename = TABLE_FILE):
 
 	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
@@ -152,6 +168,7 @@ def update_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablena
 
 	return res['data']['values'] == md5sum
 
+#update zim file status
 def update_wikipedia_zim_status(name:str, timestamp:int, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	res = fs.open_table(podname, tablename)
@@ -247,6 +264,7 @@ if __name__ == '__main__':
 	password = ''
 	dirs = '/tmp/wikipedia/doc'
 
+	#parse args
 	try:
 		opts, args = getopt.getopt(argv, "h:v:u:p:d:", [
 			"host=",
@@ -282,6 +300,7 @@ if __name__ == '__main__':
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
 		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
 
+		#check zim file one by one based on the zim timestamp from oldest to newest
 		for d in dumps:
 
 			name, size, timestamp = d
@@ -301,8 +320,9 @@ if __name__ == '__main__':
 				else:
 					logging.info(f"upload zim: {name} to {dirs} success")
 					continue
+			elif status is None:
+				break
 			else:
-				logging.info(f"zim: {name} status now is {status}")
 				continue
 
 		time.sleep(300)		
