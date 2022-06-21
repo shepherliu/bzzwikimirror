@@ -1,0 +1,80 @@
+version: '3'
+services:
+
+  fairos:
+    image: fairdatasociety/fairos-dfs:latest
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"         
+    ports:
+      - "${API_ADDR:-9090}${BEE_API_ADDR:-:9090}"
+    volumes:
+      - fairos:/home/
+    command: server --postageBlockId "8fb2e684bac716f7d568b7a69bb8711025accfa089366427590c1615d1619f76" --beeApi "http://bee:1633" --cookieDomain "http://141.94.55.59:9090" --cors-origins "https://*.bzz.link, http://0.0.0.0:8080"
+
+  bee:
+    image: ethersphere/bee:latest
+    restart: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"         
+    environment:
+      - BEE_API_ADDR
+      - BEE_BLOCK_TIME
+      - BEE_BOOTNODE=/dnsaddr/testnet.ethswarm.org
+      - BEE_BOOTNODE_MODE
+      - BEE_CLEF_SIGNER_ENABLE=false
+      - BEE_CLEF_SIGNER_ENDPOINT
+      - BEE_CONFIG
+      - BEE_CORS_ALLOWED_ORIGINS
+      - BEE_DATA_DIR
+      - BEE_CACHE_CAPACITY=10000000
+      - BEE_DB_OPEN_FILES_LIMIT
+      - BEE_DB_BLOCK_CACHE_CAPACITY
+      - BEE_DB_WRITE_BUFFER_SIZE
+      - BEE_DB_DISABLE_SEEKS_COMPACTION
+      - BEE_DEBUG_API_ADDR
+      - BEE_DEBUG_API_ENABLE=true
+      - BEE_GATEWAY_MODE
+      - BEE_GLOBAL_PINNING_ENABLE
+      - BEE_FULL_NODE
+      - BEE_NAT_ADDR
+      - BEE_NETWORK_ID=5
+      - BEE_P2P_ADDR
+      - BEE_P2P_QUIC_ENABLE
+      - BEE_P2P_WS_ENABLE
+      - BEE_PASSWORD=IKGV7tyf76F
+      - BEE_PASSWORD_FILE
+      - BEE_PAYMENT_EARLY
+      - BEE_PAYMENT_THRESHOLD
+      - BEE_PAYMENT_TOLERANCE
+      - BEE_POSTAGE_STAMP_ADDRESS
+      - BEE_RESOLVER_OPTIONS
+      - BEE_STANDALONE
+      - BEE_SWAP_ENABLE
+      - BEE_SWAP_ENDPOINT=https://goerli.infura.io/v3/f7fc0d764d074a159aadd5e084c7d1ed
+      - BEE_SWAP_FACTORY_ADDRESS
+      - BEE_SWAP_LEGACY_FACTORY_ADDRESSES
+      - BEE_SWAP_INITIAL_DEPOSIT
+      - BEE_SWAP_DEPLOYMENT_GAS_PRICE
+      - BEE_TRACING_ENABLE
+      - BEE_TRACING_ENDPOINT
+      - BEE_TRACING_SERVICE_NAME
+      - BEE_TRANSACTION
+      - BEE_VERBOSITY=5
+      - BEE_WELCOME_MESSAGE
+      - BEE_MAINNET=false
+    ports:
+      - "${API_ADDR:-127.0.0.1:1633}${BEE_API_ADDR:-:1633}"
+      - "${P2P_ADDR:-127.0.0.1:1634}${BEE_P2P_ADDR:-:1634}"
+      - "${DEBUG_API_ADDR:-127.0.0.1:1635}${BEE_DEBUG_API_ADDR:-:1635}"
+    volumes:
+      - bee:/home/bee/.bee
+    command: start
+      
+volumes:
+  bee:
+  fairos:
