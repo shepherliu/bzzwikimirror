@@ -300,7 +300,7 @@ if __name__ == '__main__':
 			elif status == EXTRACTING_STATUS:
 				logging.info(f"zim: {name} status now is {status}")
 				break
-			elif status.startswith(UPLOADING_STATUS):
+			elif status == UPLOADING_STATUS:
 				logging.info(f"zim: {name} status now is {status}")
 				break
 			elif type(status) == int and status < timestamp:

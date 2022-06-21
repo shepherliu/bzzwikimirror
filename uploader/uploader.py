@@ -293,7 +293,7 @@ if __name__ == '__main__':
 			if err != 'success':
 				logging.error(f"check zim: {name} status error: {err}")
 				break
-			elif status.startswith(UPLOADING_STATUS):
+			elif status == UPLOADING_STATUS:
 				res = upload_files(name, dirs, timestamp, fs, POD_NAME)
 				if res == False:
 					logging.warning(f"upload zim: {name} to {dirs} failed")
