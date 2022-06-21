@@ -198,6 +198,8 @@ def parse_wikipedia_dumps(data = []):
 def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	keyPresent = False
+
+	fs.update_cookie(podname, tablename)
 	
 	res = fs.key_present(podname, tablename, name)
 	if res['message'] != 'success':
@@ -221,6 +223,8 @@ def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 #update zim file status to DOWNLOADING_STATUS
 def trigger_wikipedia_update(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
+
+	fs.update_cookie(podname, tablename)
 
 	fs.put_key_value(podname, tablename, name, DOWNLOADING_STATUS)
 

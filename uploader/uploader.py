@@ -141,6 +141,8 @@ def check_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablenam
 
 	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
 
+	fs.update_cookie(podname, tablename)
+
 	res = fs.get_value(podname, tablename, keyname)
 
 	if res['message'] != 'success':
@@ -156,6 +158,8 @@ def update_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablena
 
 	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
 
+	fs.update_cookie(podname, tablename)
+
 	fs.put_key_value(podname, tablename, keyname, md5sum)
 
 	res = fs.get_value(podname, tablename, keyname)
@@ -170,6 +174,8 @@ def update_file_status(filepath:str, md5sum:str, fs, podname = POD_NAME, tablena
 
 #update zim file status
 def update_wikipedia_zim_status(name:str, timestamp:int, fs, podname = POD_NAME, tablename = TABLE_ZIM):
+
+	fs.update_cookie(podname, tablename)
 
 	res = fs.open_table(podname, tablename)
 	if res['message'] != 'success':
@@ -197,6 +203,8 @@ def update_wikipedia_zim_status(name:str, timestamp:int, fs, podname = POD_NAME,
 def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	keyPresent = False
+
+	fs.update_cookie(podname, tablename)
 	
 	res = fs.key_present(podname, tablename, name)
 	if res['message'] != 'success':

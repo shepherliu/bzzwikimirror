@@ -81,6 +81,8 @@ class Resquest(BaseHTTPRequestHandler):
 		try:
 			res = fs.download_file(POD_NAME, filepath)
 			if res['message'] != 'success':
+				#check cookie if need update
+				fs.update_cookie(POD_NAME)
 				#sync pod and try again
 				fs.sync_pod(POD_NAME)
 				res = fs.download_file(POD_NAME, filepath)
@@ -236,6 +238,8 @@ def parse_wikipedia_dumps(data = []):
 def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
 
 	keyPresent = False
+
+	fs.update_cookie(podname, tablename)
 	
 	res = fs.key_present(podname, tablename, name)
 	if res['message'] != 'success':
