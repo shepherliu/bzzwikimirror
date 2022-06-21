@@ -8,7 +8,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10M"
-    command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
+    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
 
   bzzwikimirror-downloader:
     image: bzzwikimirror/downloader:latest
@@ -19,7 +19,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
+    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
 
   bzzwikimirror-extractor:
     image: bzzwikimirror/extractor:latest
@@ -30,7 +30,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
+    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
 
   bzzwikimirror-uploader:
     image: bzzwikimirror/uploader:latest
@@ -41,7 +41,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
+    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
 
   bzzwikimirror-httpserver:
     image: bzzwikimirror/httpserver:latest
@@ -52,7 +52,7 @@ services:
         max-size: "10M"    
     ports:
       - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"
-    command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
+    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
 
 volumes:
   bzzwikimirror:
