@@ -4,11 +4,19 @@ services:
   bzzwikimirror-trigger:
     image: bzzwikimirror/trigger:latest
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"
     command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
 
   bzzwikimirror-downloader:
     image: bzzwikimirror/downloader:latest
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
     command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
@@ -16,6 +24,10 @@ services:
   bzzwikimirror-extractor:
     image: bzzwikimirror/extractor:latest
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
     command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
@@ -23,6 +35,10 @@ services:
   bzzwikimirror-uploader:
     image: bzzwikimirror/uploader:latest
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
     command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
@@ -30,6 +46,10 @@ services:
   bzzwikimirror-httpserver:
     image: bzzwikimirror/httpserver:latest
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"    
     ports:
       - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"
     command: -h http://141.94.55.59:9090 -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
