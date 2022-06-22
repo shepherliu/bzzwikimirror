@@ -101,16 +101,18 @@ def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME
 	totalcnt = 0
 	filelist = []
 
+	fs.make_dir(podname, '/'+name)
+
 	path = os.path.join(dirs, name)
 
 	#collect file list for the dir
-	for root, dirs, files in os.walk(path):
-		relpath = os.path.relpath(root, path)
+	for root, _, files in os.walk(path):
+		relpath = os.path.relpath(root, dirs)
 		relpath = os.path.join('/', relpath)
 
 		res = fs.dir_present(podname, relpath)
 		if res['message'] != 'success':
-			fs.update_cookie()
+			fs.update_cookie(podname)
 			logging.error(f"check fairos dir: {relpath} present error: {res['message']}")
 			continue
 
@@ -118,7 +120,7 @@ def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME
 			res = fs.make_dir(podname, relpath)
 
 		if res['message'] != 'success':
-			fs.update_cookie()
+			fs.update_cookie(podname)
 			logging.error(f"create fairos dir: {relpath} error: {res['message']}")
 			continue
 
@@ -129,19 +131,22 @@ def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME
 	#upload file list
 	for filepath in filelist:
 		#check if already upload or not
+		relpath = os.path.relpath(os.path.dirname(filepath), dirs)
+		relpath = os.path.join('/', relpath)	
+		basename = os.path.basebame(filepath)
+		relname = os.path.join(relpath, basebame)	
+
 		md5sum = ''
 		with open(filepath, 'rb') as f:
 			md5sum = hashlib.md5(f.read()).hexdigest()
-		if check_file_status(filepath, md5sum, etcd):
+		if check_file_status(relname, md5sum, etcd):
 			continue
 
 		#upload file until it is success
 		while True:
-			relpath = os.path.relpath(os.path.dirname(filepath), path)
-			relpath = os.path.join('/', relpath)
 			res = fs.upload_file(podname, relpath, filepath)
 			if res['message'] != 'success':
-				fs.update_cookie()
+				fs.update_cookie(podname)
 				logging.error(f"upload fairos file: {filepath} error: {res['message']}")
 				continue
 			else:
@@ -149,7 +154,7 @@ def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME
 
 		#update file status until it is success
 		while True:
-			if update_file_status(filepath, md5sum, etcd) == False:
+			if update_file_status(relname, md5sum, etcd) == False:
 				logging.error(f"update fairos file: {filepath} status failed")
 				continue
 			else:
