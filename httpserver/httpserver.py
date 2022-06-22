@@ -227,6 +227,8 @@ def check_zim_status(name, etcd):
 
 	if res is None:
 		return 'waiting'
+	else:
+		res = res.decode('utf-8')		
 
 	try:
 		if int(res) > 0:

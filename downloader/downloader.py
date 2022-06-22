@@ -96,6 +96,8 @@ def check_zim_status(name, etcd):
 
 	if res is None:
 		return (None, 'success')
+	else:
+		res = res.decode('utf-8')
 
 	try:
 		return (int(res), 'success')
@@ -144,6 +146,8 @@ def update_wikipedia_zim_status(name, etcd):
 
 	if res is None:
 		return False
+	else:
+		res = res.decode('utf-8')		
 
 	return str(res) == EXTRACTING_STATUS
 

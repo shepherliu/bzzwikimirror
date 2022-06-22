@@ -172,6 +172,8 @@ def check_file_status(filepath:str, md5sum:str, etcd):
 
 	if res is None:
 		return False
+	else:
+		res = res.decode('utf-8')		
 
 	return str(res) == md5sum
 
@@ -186,6 +188,8 @@ def update_file_status(filepath:str, md5sum:str, etcd):
 
 	if res is None:
 		return False
+	else:
+		res = res.decode('utf-8')		
 
 	return str(res) == md5sum
 
@@ -200,6 +204,8 @@ def update_wikipedia_zim_status(name:str, timestamp:int, etcd):
 
 	if res is None:
 		return False
+	else:
+		res = res.decode('utf-8')		
 
 	return str(res) == str(timestamp)
 
@@ -210,6 +216,8 @@ def check_zim_status(name, etcd):
 
 	if res is None:
 		return (None, 'success')
+	else:
+		res = res.decode('utf-8')		
 
 	try:
 		return (int(res), 'success')
