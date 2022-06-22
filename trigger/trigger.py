@@ -322,4 +322,4 @@ if __name__ == '__main__':
 			else:
 				continue
 
-		time.sleep(300)
+		time.sleep(120)
