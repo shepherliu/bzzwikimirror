@@ -198,7 +198,7 @@ if __name__ == '__main__':
 				else:
 					logging.warning(f"download zim: {name} to {dirs} failed")
 				break
-			elif status is None:
+			elif status == '' || status is None:
 				break
 			else:
 				continue

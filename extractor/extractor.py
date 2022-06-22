@@ -194,7 +194,7 @@ if __name__ == '__main__':
 				else:
 					logging.warning(f"extract zim: {name} to {dst} failed")
 				break
-			elif status is None:
+			elif status == '' || status is None:
 				break
 			else:
 				continue
