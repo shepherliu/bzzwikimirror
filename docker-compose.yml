@@ -8,7 +8,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10M"
-    command: -h etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
+    command: -h etcd
 
   bzzwikimirror-downloader:
     image: bzzwikimirror/downloader:latest
@@ -19,7 +19,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
+    command: -h etcd -d /tmp/wikipedia/zim
 
   bzzwikimirror-extractor:
     image: bzzwikimirror/extractor:latest
@@ -30,7 +30,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
+    command: -h etcd -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
 
   bzzwikimirror-uploader:
     image: bzzwikimirror/uploader:latest

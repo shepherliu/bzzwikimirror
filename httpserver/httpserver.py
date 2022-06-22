@@ -225,7 +225,7 @@ def check_zim_status(name, etcd):
 
 	res = etcd.get(name)
 
-	if res == '' || res is None:
+	if res == '' or res is None:
 		return 'waiting'
 
 	try:
