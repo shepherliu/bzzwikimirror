@@ -12,7 +12,7 @@ import mimetypes
 import requests
 import urllib.parse
 import hashlib
-
+import etcd3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from fairos.fairos import Fairos
@@ -25,13 +25,8 @@ FAIROS_VERSION = 'v1'
 
 POD_NAME = 'wikimedia_zim'
 
-TABLE_ZIM = 'zim_status'
-
-TABLE_FILE = 'file_status'
-
-TABLE_INDEX = 'index_status'
-
 fs = None
+etcd = None
 root = '~/dist'
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
@@ -82,7 +77,7 @@ class Resquest(BaseHTTPRequestHandler):
 			res = fs.download_file(POD_NAME, filepath)
 			if res['message'] != 'success':
 				#check cookie if need update
-				fs.update_cookie(POD_NAME)
+				# fs.update_cookie(POD_NAME)
 				#sync pod and try again
 				fs.sync_pod(POD_NAME)
 				res = fs.download_file(POD_NAME, filepath)
@@ -118,7 +113,7 @@ class Resquest(BaseHTTPRequestHandler):
 	def getZimFileStatus(self, name:str):
 		keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 		status = {
-			name: check_zim_status(keyname, fs)
+			name: check_zim_status(keyname, etcd)
 		}
 
 		self.send_response(200)
@@ -134,7 +129,7 @@ class Resquest(BaseHTTPRequestHandler):
 		self.wfile.write(f"<html><body><h4>file is not found</h4></body></html>".encode())		
 
 #init fairos module
-def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME, tablename = TABLE_ZIM):
+def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME):
 
 	fs = Fairos(host, version)
 
@@ -155,15 +150,6 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 		return None
 	else:
 		logging.info(f"open pod: {podname} success")
-
-	#open table
-	res = fs.open_table(podname, tablename)
-
-	if res['message'] != 'success':
-		logging.error(f"open table: {tablename} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"open table: {tablename} success")
 	
 	return fs
 
@@ -235,34 +221,20 @@ def parse_wikipedia_dumps(data = []):
 	return sorted(res, key = lambda x: parse_timestamp(x[2]))
 
 #check zim status
-def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
+def check_zim_status(name, etcd):
 
-	keyPresent = False
+	res = etcd.get(name)
 
-	fs.update_cookie(podname, tablename)
-	
-	res = fs.key_present(podname, tablename, name)
-	if res['message'] != 'success':
-		return 'waiting'
-
-	keyPresent = res['data']['present']
-	if not keyPresent:
-		return 'waiting'
-
-	res = fs.get_value(podname, tablename, name)
-	if res['message'] != 'success':
-		return 'waiting'
-
-	if res['data']['values'] is None:
+	if res == '' || res is None:
 		return 'waiting'
 
 	try:
-		if int(res['data']['values']) > 0:
+		if int(res) > 0:
 			return 'uploaded'
 		else:
 			return 'waiting'
 	except:
-		return res['data']['values']
+		return res
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
@@ -271,11 +243,13 @@ if __name__ == '__main__':
 	version = FAIROS_VERSION
 	user = ''
 	password = ''
+	etcdhost = ''
 	root = '~/dist'
 
 	try:
-		opts, args = getopt.getopt(argv, "h:v:u:p:r:", [
+		opts, args = getopt.getopt(argv, "h:e:v:u:p:r:", [
 			"host=",
+			"etcd=",
 			"version=",
             "user=",
             "password=",
@@ -288,6 +262,8 @@ if __name__ == '__main__':
 	for opt, arg in opts:
 		if opt in ['--host','-h']:
 			host = arg
+		elif opt in ['--etcd','-e']:
+			etcdhost = arg			
 		elif opt in ['--version','-v']:
 			version = arg
 		elif opt in ['--user','-u']:
@@ -303,6 +279,8 @@ if __name__ == '__main__':
 	fs = init_fairos(user, password, host, version)
 	if fs is None:
 		sys.exit(-1)
+
+	etcd = etcd3.client(host = etcdhost)
 
 	server = HTTPServer(('0.0.0.0', 8080), Resquest)
 	server.serve_forever()

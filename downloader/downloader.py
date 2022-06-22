@@ -12,23 +12,9 @@ import logging
 import urllib.parse
 import hashlib
 from urllib.request import urlretrieve
-
-from fairos.fairos import Fairos
+import etcd3
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
-
-FAIROS_HOST = "https://fairos.fairdatasociety.org"
-
-FAIROS_VERSION = 'v1'
-
-POD_NAME = 'wikimedia_zim'
-
-TABLE_ZIM = 'zim_status'
-
-TABLE_FILE = 'file_status'
-
-TABLE_INDEX = 'index_status'
-
 
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
@@ -36,40 +22,6 @@ UPLOADING_STATUS = "uploading"
 
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
-#init fairos module
-def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME, tablename = TABLE_ZIM):
-
-	fs = Fairos(host, version)
-
-	#login user
-	res = fs.login_user(username, password)
-
-	if res['message'] != 'success':
-		logging.error(f"login user: {username} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"login user: {username} success")
-
-	#open pod
-	res = fs.open_pod(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"open pod: {podname} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"open pod: {podname} success")
-	
-	#open table
-	res = fs.open_table(podname, tablename)
-
-	if res['message'] != 'success':
-		logging.error(f"open table: {tablename} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"open table: {tablename} success")
-	
-	return fs
-
 #parse timestamp
 def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
 
@@ -138,34 +90,17 @@ def parse_wikipedia_dumps(data = []):
 	return sorted(res, key = lambda x: x[2])
 
 #check zim status
-def check_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
+def check_zim_status(name, etcd):
 
-	keyPresent = False
-
-	fs.update_cookie(podname, tablename)
-	
-	res = fs.key_present(podname, tablename, name)
-	if res['message'] != 'success':
-		return (None, res['message'])
-
-	keyPresent = res['data']['present']
-	if not keyPresent:
-		return (None, 'success')
-
-	res = fs.get_value(podname, tablename, name)
-	if res['message'] != 'success':
-		return (None, res['message'])
-
-	if res['data']['values'] is None:
-		return (None, 'success')
+	res = etcd.get(name)
 
 	try:
-		return (int(res['data']['values']), 'success')
+		return (int(res), 'success')
 	except:
-		return (res['data']['values'], 'success')
+		return (res, 'success')
 
 #download zim file from the wikidumps website
-def download_wikipedia_zim(name, dirs, fs, podname = POD_NAME, tablename = TABLE_ZIM):
+def download_wikipedia_zim(name, dirs, etcd):
 
 	filepath = os.path.join(dirs, name)
 
@@ -196,43 +131,26 @@ def download_wikipedia_zim(name, dirs, fs, podname = POD_NAME, tablename = TABLE
 
 	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 	
-	return update_wikipedia_zim_status(keyname, fs, podname, tablename)
+	return update_wikipedia_zim_status(keyname, etcd)
 
 #update wiki zim file status to EXTRACTING_STATUS
-def update_wikipedia_zim_status(name, fs, podname = POD_NAME, tablename = TABLE_ZIM):
-	fs.update_cookie(podname, tablename)
+def update_wikipedia_zim_status(name, etcd):
+	etcd.put(name, EXTRACTING_STATUS)
 
-	fs.put_key_value(podname, tablename, name, EXTRACTING_STATUS)
+	res = etcd.get(name)
 
-	res = fs.get_value(podname, tablename, name)
-
-	if res['message'] != 'success':
-		return False
-
-	if len(res['data']['values']) < 1:
-		return False
-
-	if res['data']['values'] == EXTRACTING_STATUS:
-		return True
-
-	return False
+	return res == EXTRACTING_STATUS
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
-	host = FAIROS_HOST
-	version = FAIROS_VERSION
-	user = ''
-	password = ''
+	host = ''
 	dirs = '/tmp/wikipedia/zim'
 
 	#parse args
 	try:
-		opts, args = getopt.getopt(argv, "h:v:u:p:d:", [
+		opts, args = getopt.getopt(argv, "h:d:", [
 			"host=",
-			"version=",
-            "user=",
-            "password=",
             "dirs="
         ])
 	except:
@@ -242,12 +160,6 @@ if __name__ == '__main__':
 	for opt, arg in opts:
 		if opt in ['--host','-h']:
 			host = arg
-		elif opt in ['--version','-v']:
-			version = arg
-		elif opt in ['--user','-u']:
-			user = arg
-		elif opt in ['--password','-p']:
-			password = arg
 		elif opt in ['--dirs', '-d']:
 			dirs = arg
 
@@ -261,10 +173,7 @@ if __name__ == '__main__':
 
 	while True:
 
-		fs = init_fairos(user, password, host, version)
-
-		if fs is None:
-			sys.exit(-1)
+		etcd = etcd3.client(host = host)
 
 		#get all zim file list from the dump website
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
@@ -277,13 +186,13 @@ if __name__ == '__main__':
 
 			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
-			status, err = check_zim_status(keyname, fs)
+			status, err = check_zim_status(keyname, etcd)
 
 			if err != 'success':
 				logging.error(f"check zim: {name} status error: {err}")
 				break
 			elif status == DOWNLOADING_STATUS:
-				res = download_wikipedia_zim(name, dirs, fs)
+				res = download_wikipedia_zim(name, dirs, etcd)
 				if res:
 					logging.info(f"download zim: {name} to {dirs} success")
 				else:

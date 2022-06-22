@@ -8,7 +8,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10M"
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
+    command: -h etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD
 
   bzzwikimirror-downloader:
     image: bzzwikimirror/downloader:latest
@@ -19,7 +19,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
+    command: -h etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
 
   bzzwikimirror-extractor:
     image: bzzwikimirror/extractor:latest
@@ -30,7 +30,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
+    command: -h etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
 
   bzzwikimirror-uploader:
     image: bzzwikimirror/uploader:latest
@@ -41,7 +41,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
+    command: -h https://fairos.fairdatasociety.org -e etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/doc
 
   bzzwikimirror-httpserver:
     image: bzzwikimirror/httpserver:latest
@@ -52,7 +52,30 @@ services:
         max-size: "10M"    
     ports:
       - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
+    command: -h https://fairos.fairdatasociety.org -e etcd -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist
+
+  etcd:
+    image: bitnami/etcd:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    privileged: true
+    volumes:
+      - bzzetcd:/opt/bitnami/etcd/data
+    environment:
+      - "ETCD_ADVERTISE_CLIENT_URLS=http://0.0.0.0:2379"
+      - "ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
+      - "ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380"
+      - "ETCD_INITIAL_ADVERTISE_PEER_URLS=http://0.0.0.0:2380"
+      - "ALLOW_NONE_AUTHENTICATION=yes"
+      - "ETCD_INITIAL_CLUSTER=node1=http://0.0.0.0:2380"
+      - "ETCD_NAME=node1"
+      - "ETCD_DATA_DIR=/opt/bitnami/etcd/data"
+    ports:
+      - 127.0.0.1:2379:2379
+      - 127.0.0.1:2380:2380
 
 volumes:
   bzzwikimirror:
+  bzzetcd:
