@@ -277,7 +277,7 @@ if __name__ == '__main__':
 		if fs is None:
 			sys.exit(-1)	
 
-		if download_zim_status_file(fs, dirs, POD_NAME)	== False:
+		if download_zim_status_file(dirs, fs, POD_NAME)	== False:
 			continue
 
 		#get all zim file list from the dump website
