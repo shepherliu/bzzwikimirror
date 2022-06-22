@@ -143,7 +143,7 @@ if __name__ == '__main__':
 			if err != 'success':
 				logging.error(f"check zim: {name} status error: {err}")
 				break
-			elif status == '' || status is None:
+			elif status == '' or status is None:
 				res = trigger_wikipedia_update(keyname, etcd)
 				if res:
 					logging.info(f"trigger zim: {name} to update to downloading success")

@@ -312,7 +312,7 @@ if __name__ == '__main__':
 				else:
 					logging.info(f"upload zim: {name} to {dirs} success")
 					continue
-			elif status == '' || status is None:
+			elif status == '' or status is None:
 				break
 			else:
 				continue
