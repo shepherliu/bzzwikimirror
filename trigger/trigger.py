@@ -90,21 +90,27 @@ def parse_wikipedia_dumps(data = []):
 #check zim status
 def check_zim_status(name, etcd):
 
-	res = etcd.get(name)
+	res, _ = etcd.get(name)
+
+	if res is None:
+		return (None, 'success')
 
 	try:
 		return (int(res), 'success')
 	except:
-		return (res, 'success')
+		return (str(res), 'success')
 
 #update zim file status to DOWNLOADING_STATUS
 def trigger_wikipedia_update(name, etcd):
 
 	etcd.put(name, DOWNLOADING_STATUS)
 
-	res = etcd.get(name)
+	res, _ = etcd.get(name)
 
-	return res == DOWNLOADING_STATUS
+	if res is None:
+		return False
+
+	return str(res) == DOWNLOADING_STATUS
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]

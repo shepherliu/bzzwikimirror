@@ -223,9 +223,9 @@ def parse_wikipedia_dumps(data = []):
 #check zim status
 def check_zim_status(name, etcd):
 
-	res = etcd.get(name)
+	res, _ = etcd.get(name)
 
-	if res == '' or res is None:
+	if res is None:
 		return 'waiting'
 
 	try:
@@ -234,7 +234,7 @@ def check_zim_status(name, etcd):
 		else:
 			return 'waiting'
 	except:
-		return res
+		return str(res)
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]

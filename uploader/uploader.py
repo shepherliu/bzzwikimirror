@@ -168,9 +168,12 @@ def check_file_status(filepath:str, md5sum:str, etcd):
 
 	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
 
-	res = etcd.get(keyname)
+	res, _ = etcd.get(keyname)
 
-	return res == md5sum
+	if res is None:
+		return False
+
+	return str(res) == md5sum
 
 #update file status
 def update_file_status(filepath:str, md5sum:str, etcd):
@@ -179,9 +182,12 @@ def update_file_status(filepath:str, md5sum:str, etcd):
 
 	etcd.put(keyname, md5sum)
 
-	res = etcd.get(keyname)
+	res, _ = etcd.get(keyname)
 
-	return res == md5sum
+	if res is None:
+		return False
+
+	return str(res) == md5sum
 
 #update zim file status
 def update_wikipedia_zim_status(name:str, timestamp:int, etcd):
@@ -190,19 +196,25 @@ def update_wikipedia_zim_status(name:str, timestamp:int, etcd):
 
 	etcd.put(keyname, str(timestamp))
 
-	res = etcd.get(keyname)
+	res, _ = etcd.get(keyname)
 
-	return res == str(timestamp)
+	if res is None:
+		return False
+
+	return str(res) == str(timestamp)
 
 #check zim status
 def check_zim_status(name, etcd):
 
-	res = etcd.get(name)
+	res, _ = etcd.get(name)
+
+	if res is None:
+		return (None, 'success')
 
 	try:
 		return (int(res), 'success')
 	except:
-		return (res, 'success')	
+		return (str(res), 'success')	
 
 #parse timestamp
 def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):

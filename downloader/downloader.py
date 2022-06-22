@@ -92,12 +92,15 @@ def parse_wikipedia_dumps(data = []):
 #check zim status
 def check_zim_status(name, etcd):
 
-	res = etcd.get(name)
+	res, _ = etcd.get(name)
+
+	if res is None:
+		return (None, 'success')
 
 	try:
 		return (int(res), 'success')
 	except:
-		return (res, 'success')
+		return (str(res), 'success')
 
 #download zim file from the wikidumps website
 def download_wikipedia_zim(name, dirs, etcd):
@@ -137,9 +140,12 @@ def download_wikipedia_zim(name, dirs, etcd):
 def update_wikipedia_zim_status(name, etcd):
 	etcd.put(name, EXTRACTING_STATUS)
 
-	res = etcd.get(name)
+	res, _ = etcd.get(name)
 
-	return res == EXTRACTING_STATUS
+	if res is None:
+		return False
+
+	return str(res) == EXTRACTING_STATUS
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
