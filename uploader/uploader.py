@@ -95,8 +95,8 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 		#check if already upload or not
 		relpath = os.path.relpath(os.path.dirname(filepath), dirs)
 		relpath = os.path.join('/', relpath)	
-		basename = os.path.basebame(filepath)
-		relname = os.path.join(relpath, basebame)	
+		basename = os.path.basename(filepath)
+		relname = os.path.join(relpath, basename)	
 
 		md5sum = ''
 		with open(filepath, 'rb') as f:
