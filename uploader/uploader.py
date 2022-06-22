@@ -11,7 +11,8 @@ import enum
 import logging
 import urllib.parse
 import hashlib
-import etcd3
+import _pickle as pickle
+
 from fairos.fairos import Fairos
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
@@ -26,33 +27,14 @@ DOWNLOADING_STATUS = "downloading"
 EXTRACTING_STATUS = "extracting"
 UPLOADING_STATUS = "uploading"
 
+ZIM_STATUS = "zim.pik"
+FILE_STATUS = "file.pik"
+
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
 #init fairos module
 def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME):
 
 	fs = Fairos(host, version)
-
-	#check user present
-	userPresent = False
-
-	res = fs.user_present(username)
-
-	if res['message'] != 'success':
-		logging.error(f"get user: {username} status error: {res['message']}")
-		return None
-	else:
-		userPresent = res['data']['present']
-
-	#signup user if not exists
-	if not userPresent:
-
-		res = fs.signup_user(username, password)
-
-		if res['message'] != 'success':
-			logging.error(f"signup user: {username} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"signup user: {username} success")
 
 	#login user
 	res = fs.login_user(username, password)
@@ -62,28 +44,6 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 		return None
 	else:
 		logging.info(f"login user: {username} success")
-
-	#check pod presnet
-	podPresent = False
-
-	res = fs.pod_present(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"get pod: {podname} status error: {res['message']}")
-		return None
-	else:
-		podPresent = res['data']['present']
-
-	#create a new pod if not exists
-	if not podPresent:
-
-		res = fs.new_pod(podname)
-
-		if res['message'] != 'success':
-			logging.error(f"create new pod: {podname} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"create new pod: {podname} success")
 
 	#open pod
 	res = fs.open_pod(podname)
@@ -97,13 +57,15 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	return fs
 
 #upload all files of the dirs to fairos
-def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME):
+def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME):
 	totalcnt = 0
 	filelist = []
 
 	fs.make_dir(podname, '/'+name)
 
 	path = os.path.join(dirs, name)
+
+	status = load_wikipedia_file_status(src, fs, podname)
 
 	#collect file list for the dir
 	for root, _, files in os.walk(path):
@@ -139,7 +101,7 @@ def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME
 		md5sum = ''
 		with open(filepath, 'rb') as f:
 			md5sum = hashlib.md5(f.read()).hexdigest()
-		if check_file_status(relname, md5sum, etcd):
+		if check_file_status(relname, md5sum, status):
 			continue
 
 		#upload file until it is success
@@ -154,7 +116,7 @@ def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME
 
 		#update file status until it is success
 		while True:
-			if update_file_status(relname, md5sum, etcd) == False:
+			if update_file_status(relname, md5sum, status) == False:
 				logging.error(f"update fairos file: {filepath} status failed")
 				continue
 			else:
@@ -165,69 +127,119 @@ def upload_files(name:str, dirs:str, timestamp:int, etcd, fs, podname = POD_NAME
 	#if all files upload success, update the status of the zim file status
 	if totalcnt < len(filelist):
 		return False
-	else:
-		return update_wikipedia_zim_status(name, timestamp, etcd)
+
+	if update_wikipedia_zim_status(name, timestamp, src, fs, podname):
+		return update_wikipedia_file_status(src, fs, podname)
+
+	return False
 
 #check file status
-def check_file_status(filepath:str, md5sum:str, etcd):
+def check_file_status(filepath:str, md5sum:str, status):
 
-	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
+	# keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
 
-	res, _ = etcd.get(keyname)
-
-	if res is None:
+	if filepath not in status:
 		return False
-	else:
-		res = res.decode('utf-8')		
 
-	return str(res) == md5sum
+	return str(status[filepath]) == md5sum
 
 #update file status
-def update_file_status(filepath:str, md5sum:str, etcd):
+def update_file_status(filepath:str, md5sum:str, status):
 
-	keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
+	# keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
 
-	etcd.put(keyname, md5sum)
+	status[filepath] = md5sum
 
-	res, _ = etcd.get(keyname)
-
-	if res is None:
-		return False
-	else:
-		res = res.decode('utf-8')		
-
-	return str(res) == md5sum
+	return True
 
 #update zim file status
-def update_wikipedia_zim_status(name:str, timestamp:int, etcd):
+def update_wikipedia_zim_status(name:str, timestamp:int, dirs, fs, podname = POD_NAME):
 
 	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
-	etcd.put(keyname, str(timestamp))
+	pikfile = os.path.join(dirs, ZIM_STATUS)
 
-	res, _ = etcd.get(keyname)
+	zimpath = os.path.join('/', ZIM_STATUS)
 
-	if res is None:
+	try:
+		with open(pikfile, 'rb') as f:
+			res = pickle.load(f)
+			res[name] = timestamp
+		with open(pikfile, 'wb') as f:
+			pickle.dump(res, f)
+		res = fs.upload_file(podname, zimpath, pikfile)
+		if res['message'] != 'success':
+			fs.update_cookie(podname)
+			return False
+		return True
+	except:
 		return False
-	else:
-		res = res.decode('utf-8')		
 
-	return str(res) == str(timestamp)
+#update file status to fairos
+def update_wikipedia_file_status(dirs, fs, podname = POD_NAME):
+
+	pikfile = os.path.join(dirs, FILE_STATUS)
+
+	filepath = os.path.join('/', FILE_STATUS)
+
+	try:
+		res = fs.upload_file(podname, filepath, pikfile)
+		if res['message'] != 'success':
+			fs.update_cookie(podname)
+			return False
+		return True
+	except:
+		return False
+
+def load_wikipedia_file_status(dirs, fs, podname = POD_NAME):
+
+	while True:
+		pikfile = os.path.join(dirs, FILE_STATUS)
+		if os.path.isfile(pikfile):
+			with open(pikfile, 'rb') as f:
+				return pikfile.load(f)
+
+		filepath = os.path.join('/', FILE_STATUS)
+		res = fs.dir_present(podname, filepath)
+		if res['message'] != 'success':
+			fs.update_cookie(podname)
+			continue
+
+		if res['data']['present'] == False:
+			return {}
+
+		res = fs.download_file(podname, filepath)
+		if res['message'] != 'success':
+			fs.update_cookie(podname)
+			continue
+
+		with open(pikfile, 'wb') as f:
+			f.write(res['content'])
+
+		with open(pikfile, 'rb') as f:
+			return pickle.load(f)
 
 #check zim status
-def check_zim_status(name, etcd):
+def check_zim_status(name, dirs):
 
-	res, _ = etcd.get(name)
+	pikfile = os.path.join(dirs, ZIM_STATUS)
+
+	try:
+		with open(pikfile, 'rb') as f:
+			res = pickle.load(f) 
+	except:
+		return (None, 'open zim status file failed')
 
 	if res is None:
 		return (None, 'success')
-	else:
-		res = res.decode('utf-8')		
+
+	if name not in res:
+		return (None, 'success')
 
 	try:
-		return (int(res), 'success')
+		return (int(res[name]), 'success')
 	except:
-		return (str(res), 'success')	
+		return (str(res[name]), 'success')
 
 #parse timestamp
 def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
@@ -273,18 +285,18 @@ if __name__ == '__main__':
 	version = FAIROS_VERSION
 	user = ''
 	password = ''
-	etcdhost = ''
+	src = '/tmp/wikipedia/zim'
 	dirs = '/tmp/wikipedia/doc'
 
 	#parse args
 	try:
-		opts, args = getopt.getopt(argv, "h:e:v:u:p:d:", [
+		opts, args = getopt.getopt(argv, "h:v:u:p:d:s:", [
 			"host=",
-			"etcd=",
 			"version=",
             "user=",
             "password=",
-            "dirs="
+            "dirs=",
+            "src="
         ])
 	except:
 		logging.error("parse arguments failed")
@@ -293,8 +305,6 @@ if __name__ == '__main__':
 	for opt, arg in opts:
 		if opt in ['--host','-h']:
 			host = arg
-		elif opt in ['--etcd','-e']:
-			etcdhost = arg
 		elif opt in ['--version','-v']:
 			version = arg
 		elif opt in ['--user','-u']:
@@ -303,6 +313,8 @@ if __name__ == '__main__':
 			password = arg
 		elif opt in ['--dirs', '-d']:
 			dirs = arg
+		elif opt in ['--src', '-s']:
+			src = arg
 
 	while True:
 
@@ -310,8 +322,6 @@ if __name__ == '__main__':
 
 		if fs is None:
 			sys.exit(-1)
-
-		etcd = etcd3.client(host = etcdhost)
 
 		#get all zim file list from the dump website
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
@@ -324,13 +334,13 @@ if __name__ == '__main__':
 
 			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
-			status, err = check_zim_status(keyname, etcd)
+			status, err = check_zim_status(keyname, src)
 
 			if err != 'success':
 				logging.error(f"check zim: {name} status error: {err}")
 				break
 			elif status == UPLOADING_STATUS:
-				res = upload_files(name, dirs, timestamp, etcd, fs, POD_NAME)
+				res = upload_files(name, dirs, timestamp, src, fs, POD_NAME)
 				if res == False:
 					logging.warning(f"upload zim: {name} to {dirs} failed")
 					break

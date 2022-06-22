@@ -12,7 +12,7 @@ import mimetypes
 import requests
 import urllib.parse
 import hashlib
-import etcd3
+import _pickle as pickle
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from fairos.fairos import Fairos
@@ -25,9 +25,12 @@ FAIROS_VERSION = 'v1'
 
 POD_NAME = 'wikimedia_zim'
 
+ZIM_STATUS = "zim.pik"
+FILE_STATUS = "file.pik"
+
 fs = None
-etcd = None
 root = '~/dist'
+dirs = '/tmp/wikipedia/zim'
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
 
@@ -76,9 +79,6 @@ class Resquest(BaseHTTPRequestHandler):
 		try:
 			res = fs.download_file(POD_NAME, filepath)
 			if res['message'] != 'success':
-				#check cookie if need update
-				# fs.update_cookie(POD_NAME)
-				#sync pod and try again
 				fs.sync_pod(POD_NAME)
 				res = fs.download_file(POD_NAME, filepath)
 
@@ -111,9 +111,11 @@ class Resquest(BaseHTTPRequestHandler):
 
 	#get zim file status
 	def getZimFileStatus(self, name:str):
+		global dirs
+
 		keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 		status = {
-			name: check_zim_status(keyname, etcd)
+			name: check_zim_status(keyname, dirs)
 		}
 
 		self.send_response(200)
@@ -221,22 +223,29 @@ def parse_wikipedia_dumps(data = []):
 	return sorted(res, key = lambda x: parse_timestamp(x[2]))
 
 #check zim status
-def check_zim_status(name, etcd):
+def check_zim_status(name, dirs):
 
-	res, _ = etcd.get(name)
-
-	if res is None:
-		return 'waiting'
-	else:
-		res = res.decode('utf-8')		
+	pikfile = os.path.join(dirs, ZIM_STATUS)
 
 	try:
-		if int(res) > 0:
+		with open(pikfile, 'rb') as f:
+			res = pickle.load(f) 
+	except:
+		return return 'waiting'
+
+	if res is None:
+		return return 'waiting'
+
+	if name not in res:
+		return return 'waiting'
+
+	try:
+		if int(res[name]) > 0:
 			return 'uploaded'
 		else:
 			return 'waiting'
 	except:
-		return str(res)
+		return str(res[name])
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
@@ -247,11 +256,12 @@ if __name__ == '__main__':
 	password = ''
 	etcdhost = ''
 	root = '~/dist'
+	dirs = '/tmp/wikipedia/zim'
 
 	try:
-		opts, args = getopt.getopt(argv, "h:e:v:u:p:r:", [
+		opts, args = getopt.getopt(argv, "h:d:v:u:p:r:", [
 			"host=",
-			"etcd=",
+			"dirs=",
 			"version=",
             "user=",
             "password=",
@@ -264,8 +274,8 @@ if __name__ == '__main__':
 	for opt, arg in opts:
 		if opt in ['--host','-h']:
 			host = arg
-		elif opt in ['--etcd','-e']:
-			etcdhost = arg			
+		elif opt in ['--dirs','-d']:
+			dirs = arg			
 		elif opt in ['--version','-v']:
 			version = arg
 		elif opt in ['--user','-u']:
@@ -281,8 +291,6 @@ if __name__ == '__main__':
 	fs = init_fairos(user, password, host, version)
 	if fs is None:
 		sys.exit(-1)
-
-	etcd = etcd3.client(host = etcdhost)
 
 	server = HTTPServer(('0.0.0.0', 8080), Resquest)
 	server.serve_forever()

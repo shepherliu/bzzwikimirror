@@ -12,7 +12,8 @@ import logging
 import urllib.parse
 import subprocess
 import hashlib
-import etcd3
+import shutil
+import _pickle as pickle
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
 
@@ -20,6 +21,8 @@ DOWNLOADING_STATUS = "downloading"
 EXTRACTING_STATUS = "extracting"
 UPLOADING_STATUS = "uploading"
 
+ZIM_STATUS = "zim.pik"
+FILE_STATUS = "file.pik"
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
 #parse timestamp
@@ -90,22 +93,29 @@ def parse_wikipedia_dumps(data = []):
 	return sorted(res, key = lambda x: x[2])
 
 #check zim status
-def check_zim_status(name, etcd):
+def check_zim_status(name, dirs):
 
-	res, _ = etcd.get(name)
+	pikfile = os.path.join(dirs, ZIM_STATUS)
+
+	try:
+		with open(pikfile, 'rb') as f:
+			res = pickle.load(f) 
+	except:
+		return (None, 'open zim status file failed')
 
 	if res is None:
 		return (None, 'success')
-	else:
-		res = res.decode('utf-8')		
+
+	if name not in res:
+		return (None, 'success')
 
 	try:
-		return (int(res), 'success')
+		return (int(res[name]), 'success')
 	except:
-		return (str(res), 'success')
+		return (str(res[name]), 'success')
 
 #extract zim file to dst dirs using zimdump
-def extract_wikipedia_zim(name, src, dst, etcd):
+def extract_wikipedia_zim(name, src, dst):
 
 	srcpath = os.path.join(src, name)
 
@@ -117,7 +127,7 @@ def extract_wikipedia_zim(name, src, dst, etcd):
 
 	dstpath = os.path.join(dst, name)
 	if os.path.exists(dstpath):
-		os.removedirs(dstpath)
+		shutil.rmtree(dstpath)
 
 	cmd = '~/zim-tools_linux-x86_64-3.1.1/zimdump dump --dir={0} {1}'.format(dstpath, srcpath)
 	res = subprocess.Popen(cmd, shell = True, stdout = None, stderr = None).wait()
@@ -127,33 +137,32 @@ def extract_wikipedia_zim(name, src, dst, etcd):
 
 	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
-	return update_wikipedia_zim_status(keyname, etcd)
+	return update_wikipedia_zim_status(keyname, src)
 
 #update zim file status to UPLOADING_STATUS
-def update_wikipedia_zim_status(name, etcd):
+def update_wikipedia_zim_status(name, dirs):
 
-	etcd.put(name, UPLOADING_STATUS)
+	pikfile = os.path.join(dirs, ZIM_STATUS)
 
-	res, _ = etcd.get(name)
-
-	if res is None:
+	try:
+		with open(pikfile, 'rb') as f:
+			res = pickle.load(f)
+			res[name] = UPLOADING_STATUS
+		with open(pikfile, 'wb') as f:
+			pickle.dump(res, f)
+		return True
+	except:
 		return False
-	else:
-		res = res.decode('utf-8')		
-
-	return str(res) == UPLOADING_STATUS
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
-	host = ''
 	src = '/tmp/wikipedia/zim'
 	dst = '/tmp/wikipedia/doc'
 
 	#parse agrs
 	try:
-		opts, args = getopt.getopt(argv, "h:d:s:", [
-			"host=",
+		opts, args = getopt.getopt(argv, "d:s:", [
             "src=",
             "dst="
         ])
@@ -162,9 +171,7 @@ if __name__ == '__main__':
 		sys.exit(-1)
 
 	for opt, arg in opts:
-		if opt in ['--host','-h']:
-			host = arg
-		elif opt in ['--src', '-s']:
+		if opt in ['--src', '-s']:
 			src = arg
 		elif opt in ['--dst', '-d']:
 			dst = arg
@@ -179,8 +186,6 @@ if __name__ == '__main__':
 
 	while True:
 
-		etcd = etcd3.client(host = host)
-
 		#get all zim file list from the dump website
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
 		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
@@ -192,13 +197,13 @@ if __name__ == '__main__':
 
 			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
-			status, err = check_zim_status(keyname, etcd)
+			status, err = check_zim_status(keyname, src)
 
 			if err != 'success':
 				logging.error(f"check zim: {name} status error: {err}")
 				break
 			elif status == EXTRACTING_STATUS:
-				res = extract_wikipedia_zim(name, src, dst, etcd)
+				res = extract_wikipedia_zim(name, src, dst)
 				if res:
 					logging.info(f"extract zim: {name} to {dst} success")
 				else:

@@ -12,13 +12,16 @@ import logging
 import urllib.parse
 import hashlib
 from urllib.request import urlretrieve
-import etcd3
+import _pickle as pickle
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
 
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
 UPLOADING_STATUS = "uploading"
+
+ZIM_STATUS = "zim.pik"
+FILE_STATUS = "file.pik"
 
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
@@ -90,22 +93,29 @@ def parse_wikipedia_dumps(data = []):
 	return sorted(res, key = lambda x: x[2])
 
 #check zim status
-def check_zim_status(name, etcd):
+def check_zim_status(name, dirs):
 
-	res, _ = etcd.get(name)
+	pikfile = os.path.join(dirs, ZIM_STATUS)
+
+	try:
+		with open(pikfile, 'rb') as f:
+			res = pickle.load(f) 
+	except:
+		return (None, 'open zim status file failed')
 
 	if res is None:
 		return (None, 'success')
-	else:
-		res = res.decode('utf-8')
+
+	if name not in res:
+		return (None, 'success')
 
 	try:
-		return (int(res), 'success')
+		return (int(res[name]), 'success')
 	except:
-		return (str(res), 'success')
+		return (str(res[name]), 'success')
 
 #download zim file from the wikidumps website
-def download_wikipedia_zim(name, dirs, etcd):
+def download_wikipedia_zim(name, dirs):
 
 	filepath = os.path.join(dirs, name)
 
@@ -136,31 +146,31 @@ def download_wikipedia_zim(name, dirs, etcd):
 
 	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 	
-	return update_wikipedia_zim_status(keyname, etcd)
+	return update_wikipedia_zim_status(keyname, dirs)
 
 #update wiki zim file status to EXTRACTING_STATUS
 def update_wikipedia_zim_status(name, etcd):
-	etcd.put(name, EXTRACTING_STATUS)
 
-	res, _ = etcd.get(name)
+	pikfile = os.path.join(dirs, ZIM_STATUS)
 
-	if res is None:
+	try:
+		with open(pikfile, 'rb') as f:
+			res = pickle.load(f)
+			res[name] = EXTRACTING_STATUS
+		with open(pikfile, 'wb') as f:
+			pickle.dump(res, f)
+		return True
+	except:
 		return False
-	else:
-		res = res.decode('utf-8')		
-
-	return str(res) == EXTRACTING_STATUS
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
-	host = ''
 	dirs = '/tmp/wikipedia/zim'
 
 	#parse args
 	try:
-		opts, args = getopt.getopt(argv, "h:d:", [
-			"host=",
+		opts, args = getopt.getopt(argv, "d:", [
             "dirs="
         ])
 	except:
@@ -168,9 +178,7 @@ if __name__ == '__main__':
 		sys.exit(-1)
 
 	for opt, arg in opts:
-		if opt in ['--host','-h']:
-			host = arg
-		elif opt in ['--dirs', '-d']:
+		if opt in ['--dirs', '-d']:
 			dirs = arg
 
 	#make download dirs
@@ -183,8 +191,6 @@ if __name__ == '__main__':
 
 	while True:
 
-		etcd = etcd3.client(host = host)
-
 		#get all zim file list from the dump website
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
 		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
@@ -196,13 +202,13 @@ if __name__ == '__main__':
 
 			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 
-			status, err = check_zim_status(keyname, etcd)
+			status, err = check_zim_status(keyname, dirs)
 
 			if err != 'success':
 				logging.error(f"check zim: {name} status error: {err}")
 				break
 			elif status == DOWNLOADING_STATUS:
-				res = download_wikipedia_zim(name, dirs, etcd)
+				res = download_wikipedia_zim(name, dirs)
 				if res:
 					logging.info(f"download zim: {name} to {dirs} success")
 				else:
