@@ -231,13 +231,13 @@ def check_zim_status(name, dirs):
 		with open(pikfile, 'rb') as f:
 			res = pickle.load(f) 
 	except:
-		return return 'waiting'
+		return 'waiting'
 
 	if res is None:
-		return return 'waiting'
+		return 'waiting'
 
 	if name not in res:
-		return return 'waiting'
+		return 'waiting'
 
 	try:
 		if int(res[name]) > 0:
