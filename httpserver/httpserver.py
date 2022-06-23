@@ -108,10 +108,10 @@ class Resquest(resource.Resource):
 		for d in dumps:
 			name, size, timestamp = d
 			zimlist.append({
-				name:name,
-				size:size,
-				timestamp:timestamp,
-				status: '',
+				'name':name,
+				'size':size,
+				'timestamp':timestamp,
+				'status':''
 			})
 		
 		return json.dumps(zimlist).encode('utf-8')
@@ -121,7 +121,7 @@ class Resquest(resource.Resource):
 
 		keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 		status = {
-			name: check_zim_status(keyname)
+			'name': check_zim_status(keyname)
 		}
 
 		return json.dumps(status).encode('utf-8')
