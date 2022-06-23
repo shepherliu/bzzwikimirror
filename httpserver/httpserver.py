@@ -13,7 +13,8 @@ import requests
 import urllib.parse
 import hashlib
 import _pickle as pickle
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from twisted.web import server, resource
+from twisted.internet import reactor, endpoints
 
 from fairos.fairos import Fairos
 
@@ -34,17 +35,21 @@ dirs = '/tmp/wikipedia/zim'
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
 
-class Resquest(BaseHTTPRequestHandler):
-	def do_GET(self):
+class Resquest(resource.Resource):
+	isLeaf = True
+
+	def render_GET(self, request):
 		global root
 
 		path = self.path.split('?')[0]
 
 		if path.startswith('/api/zimlist'):
+			request.responseHeaders.addRawHeader(b"content-type", b"application/json")
 			return self.getZimListInfo()
 
 		if path.startswith('/api/zimstatus'):
 			relpath = os.path.relpath(path, '/api/zimstatus')
+			request.responseHeaders.addRawHeader(b"content-type", b"application/json")
 			return self.getZimFileStatus(relpath)
 
 		if path == '/':
@@ -55,6 +60,8 @@ class Resquest(BaseHTTPRequestHandler):
 		types, encoding = mimetypes.guess_type(path)
 		if types is None:
 			types = 'text/plain'
+			
+		request.responseHeaders.addRawHeader(b"content-type", types.encode('utf-8'))
 
 		if os.path.isfile(localpath):
 			return self.getFileFromLocal(localpath, types)
@@ -64,11 +71,9 @@ class Resquest(BaseHTTPRequestHandler):
 	#read file from local system
 	def getFileFromLocal(self, filepath:str, types:str):
 		try:
-			content = open(filepath, 'rb').read()
-			self.send_response(200)
-			self.send_header('Content-type', types)
-			self.end_headers()
-			self.wfile.write(content)			
+			with open(filepath, 'rb') as f:
+				content = f.read()
+			return content
 		except:
 			return self.notFoundPage()
 
@@ -86,10 +91,7 @@ class Resquest(BaseHTTPRequestHandler):
 				logging.error(f"read {filepath} from fairos error: {res['message']}")
 				return self.notFoundPage()
 			
-			self.send_response(200)
-			self.send_header('Content-type', types)
-			self.end_headers()
-			self.wfile.write(res['content'])
+			return res['content']
 		except:
 			return self.notFoundPage()
 
@@ -104,10 +106,8 @@ class Resquest(BaseHTTPRequestHandler):
 				size:size,
 				timestamp:timestamp
 			})
-		self.send_response(200)
-		self.send_header('Content-type', 'application/json')
-		self.end_headers()
-		self.wfile.write(json.dumps(zimlist).encode())
+		
+		return json.dumps(zimlist).encode('utf-8')
 
 	#get zim file status
 	def getZimFileStatus(self, name:str):
@@ -118,17 +118,11 @@ class Resquest(BaseHTTPRequestHandler):
 			name: check_zim_status(keyname, dirs)
 		}
 
-		self.send_response(200)
-		self.send_header('Content-type', 'application/json')
-		self.end_headers()
-		self.wfile.write(json.dumps(status).encode())		
+		return json.dumps(status).encode('utf-8')
 
 	#not found page
 	def notFoundPage(self):
-		self.send_response(404)
-		self.send_header('Content-type', 'text/html')	
-		self.end_headers()
-		self.wfile.write(f"<html><body><h4>file is not found</h4></body></html>".encode())		
+		return f"<html><body><h4>file is not found</h4></body></html>".encode('utf-8')
 
 #init fairos module
 def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME):
@@ -292,5 +286,7 @@ if __name__ == '__main__':
 	if fs is None:
 		sys.exit(-1)
 
-	server = HTTPServer(('0.0.0.0', 8080), Resquest)
-	server.serve_forever()
+	site = server.Site(Resquest())
+	endpoint = endpoints.TCP4ServerEndpoint(reactor, 8080)
+	endpoint.listen(site)
+	reactor.run()

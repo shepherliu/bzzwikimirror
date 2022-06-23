@@ -11,6 +11,7 @@ import enum
 import logging
 import urllib.parse
 import hashlib
+import pathlib
 import _pickle as pickle
 
 from fairos.fairos import Fairos
@@ -61,16 +62,18 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 	totalcnt = 0
 	filelist = []
 
-	fs.make_dir(podname, '/'+name)
+	fairpath = os.path.join('/', hashlib.md5(name).hexdigest())
 
-	path = os.path.join(dirs, name)
+	fs.make_dir(podname, fairpath)
+
+	rootpath = os.path.join(dirs, name)
 
 	status = load_wikipedia_file_status(src, fs, podname)
 
 	#collect file list for the dir
-	for root, _, files in os.walk(path):
-		relpath = os.path.relpath(root, dirs)
-		relpath = os.path.join('/', relpath)
+	for root, _, files in os.walk(rootpath):
+		relpath = os.path.relpath(root, rootpath)
+		relpath = os.path.join(fairpath, relpath)
 
 		res = fs.dir_present(podname, relpath)
 		if res['message'] != 'success':
@@ -93,9 +96,13 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 	#upload file list
 	for filepath in filelist:
 		#check if already upload or not
-		relpath = os.path.relpath(os.path.dirname(filepath), dirs)
-		relpath = os.path.join('/', relpath)	
+		relpath = os.path.relpath(os.path.dirname(filepath), rootpath)
+		relpath = os.path.join(fairpath, relpath)	
+
 		basename = os.path.basename(filepath)
+		# extname = pathlib.Path(filepath).suffix
+		# basename = hashlib.md5(filepath).hexdigest() + extname
+
 		relname = os.path.join(relpath, basename)	
 
 		md5sum = ''
