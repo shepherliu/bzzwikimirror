@@ -261,12 +261,6 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	if sharepod != '':
 		res = fs.pod_receive(sharepod)
 
-		if res['message'] != 'success':
-			logging.error(f"open pod: {sharepod} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"receive shared pod: {sharepod} success")
-
 	#open pod
 	res = fs.open_pod(podname)
 
