@@ -49,11 +49,17 @@ class Resquest(resource.Resource):
 		if path.startswith('/api/zimlist'):
 			request.responseHeaders.addRawHeader(b"content-type", b"application/json")
 			return self.getZimListInfo()
-
-		if path.startswith('/api/zimstatus'):
+		elif path.startswith('/api/zimstatus'):
 			relpath = os.path.relpath(path, '/api/zimstatus')
 			request.responseHeaders.addRawHeader(b"content-type", b"application/json")
 			return self.getZimFileStatus(relpath)
+		elif path.startswith('/api/filelist'):
+			relpath = os.path.relpath(path, '/api/filelist')
+		elif path.startswith('/api/filesearch'):
+			relpath = os.path.relpath(path, '/api/filesearch')
+		elif path.startswith('/api/contentsearch'):
+			relpath = os.path.relpath(path, '/api/contentsearch')
+
 
 		if path == '/':
 			path = '/index.html'
@@ -118,6 +124,97 @@ class Resquest(resource.Resource):
 		}
 
 		return json.dumps(status).encode('utf-8')
+
+	#get file list
+	def getFileList(self, path):
+		params = path.split('/')
+		pageSize = 100
+		pageCount = 0
+		if len(params) > 0:
+			try:
+				pageSize = int(params[0])
+			except:
+				pageSize = 100
+		if len(params) > 1:
+			try:
+				pageCount = int(params[1])
+			except:
+				pageCount = 0
+
+		start = pageCount * pageSize
+		end = start + pageSize
+
+		if end > len(filelist):
+			end = len(fileList)
+
+		if start > end:
+			start = end
+
+		return json.dumps(fileList[start:end]).encode('utf-8')
+
+	#get file search
+	def getFileSearch(self, path):
+		params = path.split('/')
+		pageSize = 100
+		pageCount = 0
+		search = ''
+		if len(params) > 0:
+			search = params[0]
+		if len(params) > 1:
+			try:
+				pageSize = int(params[1])
+			except:
+				pageSize = 100
+		if len(params) > 2:
+			try:
+				pageCount = int(params[2])
+			except:
+				pageCount = 0
+		start = pageCount * pageSize
+		end = start + pageSize
+
+		total = 0
+		tmp = []
+		for key in fileList:
+			if search == '' or key.find(search) >= 0:
+				tmp.append(key)
+				total += 1
+			if totalcnt >= end:
+				break
+
+		if end > len(tmp):
+			end = len(tmp)
+
+		if start > end:
+			start = end		
+
+		return json.dumps(tmp[start:end]).encode('utf-8')
+
+	#get content search
+	def getContentSearch(self, path):
+		params = path.split('/')
+		pageSize = 100
+		pageCount = 0
+		search = ''
+		if len(params) > 0:
+			search = params[0]
+		if len(params) > 1:
+			try:
+				pageSize = int(params[1])
+			except:
+				pageSize = 100
+		if len(params) > 2:
+			try:
+				pageCount = int(params[2])
+			except:
+				pageCount = 0
+		start = pageCount * pageSize
+		end = start + pageSize
+
+		total = 0
+		tmp = []		
+		
+		return json.dumps(tmp[start:end]).encode('utf-8')
 
 	#not found page
 	def notFoundPage(self):
@@ -272,7 +369,7 @@ def update_status():
 				data = json.loads(res['content'])
 				tmp = []
 				for key in data.keys():
-					if key.find('/A/'):
+					if key.find('/A/') >= 0:
 						tmp.append(key)
 				fileList = tmp
 
