@@ -270,7 +270,7 @@ def load_wikipedia_file_status(dirs, fs, podname = POD_NAME):
 		pikfile = os.path.join(dirs, FILE_STATUS)
 		if os.path.isfile(pikfile):
 			with open(pikfile, 'rb') as f:
-				return pikfile.load(f)
+				return pickle.load(f)
 
 		filepath = os.path.join('/', FILE_STATUS)
 		res = fs.dir_present(podname, filepath)
