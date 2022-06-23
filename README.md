@@ -16,3 +16,7 @@ wiki mirror based on swarm
 4. run the docker-compose service: 
 
     sh run.sh
+    
+    
+***How It Works***
+<img width="965" alt="snapshot" src="https://user-images.githubusercontent.com/84829620/175287522-9b9a96b2-0c71-417c-a87e-1a65b8b58f3a.png">
