@@ -70,7 +70,7 @@ const contentSearch = ref('');
 
 const activeName = connectState.activeName;
 const loadStatus = ref(false);
-const pageSize = ref(10);
+const pageSize = ref(100);
 const currentPage = ref(0);
 const tokenList = ref(new Array());
 const hasMore = ref(false);
