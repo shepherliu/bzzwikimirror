@@ -45,18 +45,5 @@ services:
       - bzzwikimirror:/tmp
     command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
 
-  bzzwikimirror-httpserver:
-    image: bzzwikimirror/httpserver:latest
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10M"    
-    ports:
-      - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"
-    volumes:
-      - bzzwikimirror:/tmp      
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim -r /dist
-
 volumes:
   bzzwikimirror:

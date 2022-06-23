@@ -100,6 +100,13 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 		return None
 	else:
 		logging.info(f"open pod: {podname} success")
+
+	res = fs.share_pod(podname)
+
+	if res['message'] != 'success':
+		logging.error(f"share pod: {podname} error: {res['message']}")
+	else:
+		logging.info(f"share pod: {podname} success, pod sharing reference: {res['data']['pod_sharing_reference']}")
 	
 	return fs
 #parse timestamp

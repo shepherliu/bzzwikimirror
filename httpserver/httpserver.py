@@ -283,14 +283,16 @@ if __name__ == '__main__':
 	password = ''
 	etcdhost = ''
 	root = '~/dist'
+	sharepod = ''
 
 	try:
-		opts, args = getopt.getopt(argv, "h:v:u:p:r:", [
+		opts, args = getopt.getopt(argv, "h:v:u:p:r:s:", [
 			"host=",
 			"version=",
             "user=",
             "password=",
-            "root="
+            "root=",
+            "sharepod="
         ])
 	except:
 		logging.error("parse arguments failed")
@@ -307,6 +309,8 @@ if __name__ == '__main__':
 			password = arg
 		elif opt in ['--root', '-r']:
 			root = arg
+		elif opt in ['--sharepod', '-s']:
+			sharepod = arg			
 
 	if not os.path.exists(root):
 		os.makedirs(root)
@@ -314,6 +318,9 @@ if __name__ == '__main__':
 	fs = init_fairos(user, password, host, version)
 	if fs is None:
 		sys.exit(-1)
+
+	if sharepod != '':
+		fs.pod_receive(sharepod)
 
 	Thread(target = update_fairos).start()
 	Thread(target = update_status).start()

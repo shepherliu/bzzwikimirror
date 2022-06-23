@@ -1,0 +1,13 @@
+version: '3'
+services:
+
+  bzzwikimirror-httpserver:
+    image: bzzwikimirror/httpserver:latest
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"    
+    ports:
+      - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"    
+    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -r /dist -s ''
