@@ -191,7 +191,7 @@ def update_wikipedia_zim_status(name:str, timestamp:int, dirs, fs, podname = POD
 	try:
 		with open(pikfile, 'rb') as f:
 			res = pickle.load(f)
-			res[name] = timestamp
+			res[keyname] = timestamp
 		with open(pikfile, 'wb') as f:
 			pickle.dump(res, f)
 		res = fs.upload_file(podname, zimpath, pikfile)
