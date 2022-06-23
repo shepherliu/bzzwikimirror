@@ -42,7 +42,7 @@ class Resquest(resource.Resource):
 	def render_GET(self, request):
 		global root
 
-		path = request.prepath.split('?')[0]
+		path = request.path.decode('utf-8').split('?')[0]
 
 		if path.startswith('/api/zimlist'):
 			request.responseHeaders.addRawHeader(b"content-type", b"application/json")

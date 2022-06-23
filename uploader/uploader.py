@@ -122,21 +122,25 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 			else:
 				break
 
-		#update file status until it is success
-		while True:
-			if update_file_status(relname, md5sum, status) == False:
-				logging.error(f"update fairos file: {filepath} status failed")
-				continue
-			else:
-				totalcnt += 1
-				logging.info(f"upload fairos file: {filepath} success, total process: {totalcnt}/{len(filelist)}")
-				break
+		#update file status
+		status = update_file_status(relname, md5sum, status)
+		totalcnt += 1
+		logging.info(f"upload fairos file: {filepath} success, total process: {totalcnt}/{len(filelist)}")
 
 	#if all files upload success, update the status of the zim file status
 	if totalcnt < len(filelist):
 		return False
 
+	#dump file status to local
 	while True:
+		pikfile = os.path.join(dirs, FILE_STATUS)
+		with open(pikfile, 'wb') as f:
+			pickle.dump(status, f)
+		break
+
+	#update status to fairos
+	while True:
+
 		if update_wikipedia_zim_status(name, timestamp, src, fs, podname) == False:
 			continue
 
@@ -162,7 +166,7 @@ def update_file_status(filepath:str, md5sum:str, status):
 
 	status[filepath] = md5sum
 
-	return True
+	return status
 
 #update zim file status
 def update_wikipedia_zim_status(name:str, timestamp:int, dirs, fs, podname = POD_NAME):
