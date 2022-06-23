@@ -31,7 +31,7 @@ ZIM_STATUS = "zim.pik"
 FILE_STATUS = "file.pik"
 
 fs = None
-root = '~/dist'
+root = '/dist'
 
 zimStatus = {}
 fileList = []
@@ -64,7 +64,7 @@ class Resquest(resource.Resource):
 		if path == '/':
 			path = '/index.html'
 
-		localpath = os.path.join(root, path.split('/')[1])
+		localpath = os.path.join(root, path[1:])
 
 		types, encoding = mimetypes.guess_type(path)
 		if types is None:
@@ -409,7 +409,7 @@ if __name__ == '__main__':
 	user = ''
 	password = ''
 	etcdhost = ''
-	root = '~/dist'
+	root = '/dist'
 	sharepod = ''
 
 	try:
