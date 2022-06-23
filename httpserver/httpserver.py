@@ -452,7 +452,7 @@ if __name__ == '__main__':
 	if not os.path.exists(root):
 		os.makedirs(root)
 
-	fs = init_fairos(user, password, host, version, sharepod)
+	fs = init_fairos(user, password, host, version, POD_NAME, sharepod)
 	if fs is None:
 		sys.exit(-1)
 
