@@ -155,6 +155,8 @@ const handleClick = async () => {
 
 }
 
+connectState.searchCallback = handleClick;
+
 //try get activeName from the url paramter
 try{
   activeName.value = tools.getUrlParamter('activeName');

@@ -19,7 +19,7 @@
             <thead>
               <th width="350px">Name</th>
               <th width="150px">Size</th>
-              <th width="150px">Status</th>
+              <th width="150px">Syncstatus</th>
               <th width="150px">Timestamp</th>
             </thead>
             <tbody>
@@ -29,7 +29,7 @@
                     <el-link :href="zimExplorerUrl(item.name)" type="primary" target="_blank">{{item.name}}</el-link>
                   </td>
                   <td>{{item.size}}</td>
-                  <td>{{item.status}}</td>
+                  <td>{{item.status.name}}</td>
                   <td>{{item.timestamp}}</td>
                 </tr>
               </template>
@@ -155,6 +155,8 @@ const handleClick = async () => {
   }
 
 }
+
+connectState.searchCallback = handleClick;
 
 //try get activeName from the url paramter
 try{
