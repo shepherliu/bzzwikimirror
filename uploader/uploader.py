@@ -62,7 +62,7 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 	totalcnt = 0
 	filelist = []
 
-	fairpath = os.path.join('/', hashlib.md5(name).hexdigest())
+	fairpath = os.path.join('/', hashlib.md5(name.encode('utf-8')).hexdigest())
 
 	fs.make_dir(podname, fairpath)
 
