@@ -38,6 +38,28 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 
 	fs = Fairos(host, version)
 
+	#check user present
+	userPresent = False
+
+	res = fs.user_present(username)
+
+	if res['message'] != 'success':
+		logging.error(f"get user: {username} status error: {res['message']}")
+		return None
+	else:
+		userPresent = res['data']['present']
+
+	#signup user if not exists
+	if not userPresent:
+
+		res = fs.signup_user(username, password)
+
+		if res['message'] != 'success':
+			logging.error(f"signup user: {username} error: {res['message']}")
+			return None
+		else:
+			logging.info(f"signup user: {username} success")
+
 	#login user
 	res = fs.login_user(username, password)
 
@@ -47,6 +69,28 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 	else:
 		logging.info(f"login user: {username} success")
 
+	#check pod presnet
+	podPresent = False
+
+	res = fs.pod_present(podname)
+
+	if res['message'] != 'success':
+		logging.error(f"get pod: {podname} status error: {res['message']}")
+		return None
+	else:
+		podPresent = res['data']['present']
+
+	#create a new pod if not exists
+	if not podPresent:
+
+		res = fs.new_pod(podname)
+
+		if res['message'] != 'success':
+			logging.error(f"create new pod: {podname} error: {res['message']}")
+			return None
+		else:
+			logging.info(f"create new pod: {podname} success")
+
 	#open pod
 	res = fs.open_pod(podname)
 
@@ -55,6 +99,13 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 		return None
 	else:
 		logging.info(f"open pod: {podname} success")
+
+	res = fs.share_pod(podname)
+
+	if res['message'] != 'success':
+		logging.error(f"share pod: {podname} error: {res['message']}")
+	else:
+		logging.info(f"share pod: {podname} success, pod sharing reference: {res['data']['pod_sharing_reference']}")
 	
 	return fs
 
