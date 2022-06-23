@@ -293,18 +293,13 @@ def parse_wikipedia_dumps(data = []):
 def update_fairos():
 	global fs
 
-	time.sleep(60)
+	time.sleep(120)
 
 	while True:
-		if fs is None:
-			time.sleep(60)
-			continue
 
 		res = fs.dir_present(POD_NAME, '/')
 		if res['message'] != 'success':
 			fs.update_cookie(POD_NAME)
-
-		fs.sync_pod(POD_NAME)
 		
 		time.sleep(20)
 		continue	

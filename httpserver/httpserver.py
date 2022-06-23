@@ -32,7 +32,9 @@ FILE_STATUS = "file.pik"
 
 fs = None
 root = '~/dist'
-dirs = '/tmp/wikipedia/zim'
+
+zimStatus = {}
+fileList = []
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
 
@@ -109,11 +111,10 @@ class Resquest(resource.Resource):
 
 	#get zim file status
 	def getZimFileStatus(self, name:str):
-		global dirs
 
 		keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
 		status = {
-			name: check_zim_status(keyname, dirs)
+			name: check_zim_status(keyname)
 		}
 
 		return json.dumps(status).encode('utf-8')
@@ -215,48 +216,63 @@ def parse_wikipedia_dumps(data = []):
 	return sorted(res, key = lambda x: parse_timestamp(x[2]))
 
 #check zim status
-def check_zim_status(name, dirs):
+def check_zim_status(name):
 
-	pikfile = os.path.join(dirs, ZIM_STATUS)
+	global zimStatus
 
-	try:
-		with open(pikfile, 'rb') as f:
-			res = pickle.load(f) 
-	except:
+	if zimStatus is None:
 		return 'waiting'
 
-	if res is None:
-		return 'waiting'
-
-	if name not in res:
+	if name not in zimStatus:
 		return 'waiting'
 
 	try:
-		if int(res[name]) > 0:
+		if int(zimStatus[name]) > 0:
 			return 'uploaded'
 		else:
 			return 'waiting'
 	except:
-		return str(res[name])
+		return str(zimStatus[name])
 
 def update_fairos():
 	global fs
 
-	time.sleep(60)
+	time.sleep(120)
 
 	while True:
-		if fs is None:
-			time.sleep(60)
-			continue
 
 		res = fs.dir_present(POD_NAME, '/')
 		if res['message'] != 'success':
 			fs.update_cookie(POD_NAME)
-		
+
+		time.sleep(5)
+		continue	
+
+def update_status():
+	global fs
+	global zimStatus
+	global fileList
+
+	zimpath = os.path.join('/', ZIM_STATUS)
+	filepath = os.path.join('/', FILE_STATUS)
+
+	while True:
 		fs.sync_pod(POD_NAME)
 
-		time.sleep(20)
-		continue		
+		res = fs.download_file(POD_NAME, zimpath)
+		if res['message'] == 'success':
+			zimStatus = json.loads(res['content'])
+
+		res = fs.download_file(POD_NAME, filepath)
+		if res['message'] == 'success':
+			data = json.loads(res['content'])
+			tmp = []
+			for key in data.keys():
+				if key.find('/A/'):
+					tmp.append(key)
+			fileList = tmp
+
+		time.sleep(3600)
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
@@ -267,12 +283,10 @@ if __name__ == '__main__':
 	password = ''
 	etcdhost = ''
 	root = '~/dist'
-	dirs = '/tmp/wikipedia/zim'
 
 	try:
-		opts, args = getopt.getopt(argv, "h:d:v:u:p:r:", [
+		opts, args = getopt.getopt(argv, "h:v:u:p:r:", [
 			"host=",
-			"dirs=",
 			"version=",
             "user=",
             "password=",
@@ -284,9 +298,7 @@ if __name__ == '__main__':
 
 	for opt, arg in opts:
 		if opt in ['--host','-h']:
-			host = arg
-		elif opt in ['--dirs','-d']:
-			dirs = arg			
+			host = arg		
 		elif opt in ['--version','-v']:
 			version = arg
 		elif opt in ['--user','-u']:
@@ -303,7 +315,8 @@ if __name__ == '__main__':
 	if fs is None:
 		sys.exit(-1)
 
-	thread = Thread(target = update_fairos).start()
+	Thread(target = update_fairos).start()
+	Thread(target = update_status).start()
 
 	site = server.Site(Resquest())
 	endpoint = endpoints.TCP4ServerEndpoint(reactor, 8080)
