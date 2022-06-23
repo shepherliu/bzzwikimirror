@@ -12,6 +12,7 @@ import logging
 import urllib.parse
 import hashlib
 import pathlib
+import shutil
 import _pickle as pickle
 from threading import Thread
 
@@ -437,6 +438,8 @@ if __name__ == '__main__':
 					break
 				else:
 					logging.info(f"upload zim: {name} to {dirs} success")
+					shutil.rmtree(os.path.join(src, name))
+					shutil.rmtree(os.path.join(dirs, name))
 					continue
 			elif status == '' or status is None:
 				break

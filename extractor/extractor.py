@@ -206,6 +206,7 @@ if __name__ == '__main__':
 				res = extract_wikipedia_zim(name, src, dst)
 				if res:
 					logging.info(f"extract zim: {name} to {dst} success")
+					shutil.rmtree(os.path.join(src, name))
 				else:
 					logging.warning(f"extract zim: {name} to {dst} failed")
 				break
