@@ -186,15 +186,13 @@ def update_wikipedia_zim_status(name:str, timestamp:int, dirs, fs, podname = POD
 
 	pikfile = os.path.join(dirs, ZIM_STATUS)
 
-	zimpath = os.path.join('/', ZIM_STATUS)
-
 	try:
 		with open(pikfile, 'rb') as f:
 			res = pickle.load(f)
 			res[keyname] = timestamp
 		with open(pikfile, 'wb') as f:
 			pickle.dump(res, f)
-		res = fs.upload_file(podname, zimpath, pikfile)
+		res = fs.upload_file(podname, '/', pikfile)
 		if res['message'] != 'success':
 			return False
 		return True
@@ -206,10 +204,8 @@ def update_wikipedia_file_status(dirs, fs, podname = POD_NAME):
 
 	pikfile = os.path.join(dirs, FILE_STATUS)
 
-	filepath = os.path.join('/', FILE_STATUS)
-
 	try:
-		res = fs.upload_file(podname, filepath, pikfile)
+		res = fs.upload_file(podname, '/', pikfile)
 		if res['message'] != 'success':
 			return False
 		return True
