@@ -226,6 +226,28 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 
 	fs = Fairos(host, version)
 
+	#check user present
+	userPresent = False
+
+	res = fs.user_present(username)
+
+	if res['message'] != 'success':
+		logging.error(f"get user: {username} status error: {res['message']}")
+		return None
+	else:
+		userPresent = res['data']['present']
+
+	#signup user if not exists
+	if not userPresent:
+
+		res = fs.signup_user(username, password)
+
+		if res['message'] != 'success':
+			logging.error(f"signup user: {username} error: {res['message']}")
+			return None
+		else:
+			logging.info(f"signup user: {username} success")
+
 	#login user
 	res = fs.login_user(username, password)
 
