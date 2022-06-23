@@ -222,7 +222,7 @@ class Resquest(resource.Resource):
 		return f"file is not found".encode('utf-8')
 
 #init fairos module
-def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME):
+def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME, sharepod = ''):
 
 	fs = Fairos(host, version)
 
@@ -256,6 +256,16 @@ def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION
 		return None
 	else:
 		logging.info(f"login user: {username} success")
+
+	#receive shared pod
+	if sharepod != '':
+		res = fs.pod_receive(sharepod)
+
+		if res['message'] != 'success':
+			logging.error(f"open pod: {sharepod} error: {res['message']}")
+			return None
+		else:
+			logging.info(f"receive shared pod: {sharepod} success")
 
 	#open pod
 	res = fs.open_pod(podname)
@@ -442,12 +452,9 @@ if __name__ == '__main__':
 	if not os.path.exists(root):
 		os.makedirs(root)
 
-	fs = init_fairos(user, password, host, version)
+	fs = init_fairos(user, password, host, version, sharepod)
 	if fs is None:
 		sys.exit(-1)
-
-	if sharepod != '':
-		fs.pod_receive(sharepod)
 
 	Thread(target = update_fairos).start()
 	Thread(target = update_status).start()
