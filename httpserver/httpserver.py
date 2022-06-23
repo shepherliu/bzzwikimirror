@@ -110,7 +110,8 @@ class Resquest(resource.Resource):
 			zimlist.append({
 				name:name,
 				size:size,
-				timestamp:timestamp
+				timestamp:timestamp,
+				status: '',
 			})
 		
 		return json.dumps(zimlist).encode('utf-8')

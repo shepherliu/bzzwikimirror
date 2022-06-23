@@ -11,4 +11,6 @@ RUN cd ~ \
 
 COPY httpserver.py httpserver.py
 
+COPY dist /
+
 ENTRYPOINT ["python3", "/httpserver.py"]
