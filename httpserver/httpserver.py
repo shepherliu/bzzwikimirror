@@ -241,12 +241,15 @@ def update_fairos():
 
 	while True:
 
-		res = fs.dir_present(POD_NAME, '/')
-		if res['message'] != 'success':
-			fs.update_cookie(POD_NAME)
+		try:
+			res = fs.dir_present(POD_NAME, '/')
+			if res['message'] != 'success':
+				fs.update_cookie(POD_NAME)
 
-		time.sleep(5)
-		continue	
+			time.sleep(5)
+		except:
+			time.sleep(5)
+			continue	
 
 def update_status():
 	global fs
@@ -257,22 +260,26 @@ def update_status():
 	filepath = os.path.join('/', FILE_STATUS)
 
 	while True:
-		fs.sync_pod(POD_NAME)
+		try:
+			fs.sync_pod(POD_NAME)
 
-		res = fs.download_file(POD_NAME, zimpath)
-		if res['message'] == 'success':
-			zimStatus = json.loads(res['content'])
+			res = fs.download_file(POD_NAME, zimpath)
+			if res['message'] == 'success':
+				zimStatus = json.loads(res['content'])
 
-		res = fs.download_file(POD_NAME, filepath)
-		if res['message'] == 'success':
-			data = json.loads(res['content'])
-			tmp = []
-			for key in data.keys():
-				if key.find('/A/'):
-					tmp.append(key)
-			fileList = tmp
+			res = fs.download_file(POD_NAME, filepath)
+			if res['message'] == 'success':
+				data = json.loads(res['content'])
+				tmp = []
+				for key in data.keys():
+					if key.find('/A/'):
+						tmp.append(key)
+				fileList = tmp
 
-		time.sleep(3600)
+			time.sleep(3600)
+		except:
+			time.sleep(120)
+			continue
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]

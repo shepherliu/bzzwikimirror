@@ -254,12 +254,15 @@ def update_fairos():
 
 	while True:
 
-		res = fs.dir_present(POD_NAME, '/')
-		if res['message'] != 'success':
-			fs.update_cookie(POD_NAME)
+		try:
+			res = fs.dir_present(POD_NAME, '/')
+			if res['message'] != 'success':
+				fs.update_cookie(POD_NAME)
 
-		time.sleep(20)
-		continue
+			time.sleep(20)
+		except:
+			time.sleep(20)
+			continue
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
