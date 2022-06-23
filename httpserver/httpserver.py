@@ -218,7 +218,7 @@ class Resquest(resource.Resource):
 
 	#not found page
 	def notFoundPage(self):
-		return f"<html><body><h4>file is not found</h4></body></html>".encode('utf-8')
+		return f"file is not found".encode('utf-8')
 
 #init fairos module
 def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME):
