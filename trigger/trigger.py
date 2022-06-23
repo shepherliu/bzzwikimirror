@@ -12,6 +12,7 @@ import logging
 import urllib.parse
 import hashlib
 import _pickle as pickle
+from threading import Thread
 
 from fairos.fairos import Fairos
 
@@ -29,6 +30,8 @@ UPLOADING_STATUS = "uploading"
 
 ZIM_STATUS = "zim.pik"
 FILE_STATUS = "file.pik"
+
+fs = None
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
 #init fairos module
@@ -237,6 +240,25 @@ def trigger_wikipedia_update(name, dirs):
 	except:
 		return False
 
+def update_fairos():
+	global fs
+
+	time.sleep(60)
+
+	while True:
+		if fs is None:
+			time.sleep(60)
+			continue
+
+		res = fs.dir_present(POD_NAME, '/')
+		if res['message'] != 'success':
+			fs.update_cookie(POD_NAME)
+		
+		fs.sync_pod(POD_NAME)
+
+		time.sleep(20)
+		continue
+
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
@@ -270,12 +292,14 @@ if __name__ == '__main__':
 		elif opt in ['--dirs', '-d']:
 			dirs = arg
 
+	fs = init_fairos(user, password, host, version)
+
+	if fs is None:
+		sys.exit(-1)			
+
+	thread = Thread(target = update_fairos).start()
+
 	while True:
-
-		fs = init_fairos(user, password, host, version)
-
-		if fs is None:
-			sys.exit(-1)	
 
 		if download_zim_status_file(dirs, fs, POD_NAME)	== False:
 			continue

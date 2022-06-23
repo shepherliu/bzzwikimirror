@@ -13,6 +13,7 @@ import urllib.parse
 import hashlib
 import pathlib
 import _pickle as pickle
+from threading import Thread
 
 from fairos.fairos import Fairos
 
@@ -75,19 +76,19 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 		relpath = os.path.relpath(root, rootpath)
 		relpath = os.path.join(fairpath, relpath)
 
-		res = fs.dir_present(podname, relpath)
-		if res['message'] != 'success':
-			fs.update_cookie(podname)
-			logging.error(f"check fairos dir: {relpath} present error: {res['message']}")
-			continue
-
-		if res['data']['present'] == False:
+		while True:
+			res = fs.dir_present(podname, relpath)
+			if res['message'] != 'success':
+				logging.error(f"check fairos dir: {relpath} present error: {res['message']}")
+				continue
+			if res['data']['present']:
+				break
 			res = fs.make_dir(podname, relpath)
-
-		if res['message'] != 'success':
-			fs.update_cookie(podname)
-			logging.error(f"create fairos dir: {relpath} error: {res['message']}")
-			continue
+			if res['message'] != 'success':
+				logging.error(f"create fairos dir: {relpath} error: {res['message']}")
+				continue
+			else:
+				break
 
 		for file in files:
 			filepath = os.path.join(root, file)
@@ -109,13 +110,13 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 		with open(filepath, 'rb') as f:
 			md5sum = hashlib.md5(f.read()).hexdigest()
 		if check_file_status(relname, md5sum, status):
+			totalcnt += 1
 			continue
 
 		#upload file until it is success
 		while True:
 			res = fs.upload_file(podname, relpath, filepath)
 			if res['message'] != 'success':
-				fs.update_cookie(podname)
 				logging.error(f"upload fairos file: {filepath} error: {res['message']}")
 				continue
 			else:
@@ -135,10 +136,14 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 	if totalcnt < len(filelist):
 		return False
 
-	if update_wikipedia_zim_status(name, timestamp, src, fs, podname):
-		return update_wikipedia_file_status(src, fs, podname)
+	while True:
+		if update_wikipedia_zim_status(name, timestamp, src, fs, podname) == False:
+			continue
 
-	return False
+		if update_wikipedia_file_status(src, fs, podname):
+			break
+
+	return True
 
 #check file status
 def check_file_status(filepath:str, md5sum:str, status):
@@ -176,7 +181,6 @@ def update_wikipedia_zim_status(name:str, timestamp:int, dirs, fs, podname = POD
 			pickle.dump(res, f)
 		res = fs.upload_file(podname, zimpath, pikfile)
 		if res['message'] != 'success':
-			fs.update_cookie(podname)
 			return False
 		return True
 	except:
@@ -192,7 +196,6 @@ def update_wikipedia_file_status(dirs, fs, podname = POD_NAME):
 	try:
 		res = fs.upload_file(podname, filepath, pikfile)
 		if res['message'] != 'success':
-			fs.update_cookie(podname)
 			return False
 		return True
 	except:
@@ -209,7 +212,6 @@ def load_wikipedia_file_status(dirs, fs, podname = POD_NAME):
 		filepath = os.path.join('/', FILE_STATUS)
 		res = fs.dir_present(podname, filepath)
 		if res['message'] != 'success':
-			fs.update_cookie(podname)
 			continue
 
 		if res['data']['present'] == False:
@@ -217,7 +219,6 @@ def load_wikipedia_file_status(dirs, fs, podname = POD_NAME):
 
 		res = fs.download_file(podname, filepath)
 		if res['message'] != 'success':
-			fs.update_cookie(podname)
 			continue
 
 		with open(pikfile, 'wb') as f:
@@ -285,6 +286,25 @@ def parse_wikipedia_dumps(data = []):
 	
 	return sorted(res, key = lambda x: x[2])	
 
+def update_fairos():
+	global fs
+
+	time.sleep(60)
+
+	while True:
+		if fs is None:
+			time.sleep(60)
+			continue
+
+		res = fs.dir_present(POD_NAME, '/')
+		if res['message'] != 'success':
+			fs.update_cookie(POD_NAME)
+
+		fs.sync_pod(POD_NAME)
+		
+		time.sleep(20)
+		continue	
+
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
@@ -323,12 +343,14 @@ if __name__ == '__main__':
 		elif opt in ['--src', '-s']:
 			src = arg
 
+	fs = init_fairos(user, password, host, version)
+
+	if fs is None:
+		sys.exit(-1)
+
+	thread = Thread(target = update_fairos).start()
+
 	while True:
-
-		fs = init_fairos(user, password, host, version)
-
-		if fs is None:
-			sys.exit(-1)
 
 		#get all zim file list from the dump website
 		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())

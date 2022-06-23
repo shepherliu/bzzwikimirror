@@ -13,6 +13,7 @@ import requests
 import urllib.parse
 import hashlib
 import _pickle as pickle
+from threading import Thread
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
 
@@ -41,7 +42,7 @@ class Resquest(resource.Resource):
 	def render_GET(self, request):
 		global root
 
-		path = self.path.split('?')[0]
+		path = request.prepath.split('?')[0]
 
 		if path.startswith('/api/zimlist'):
 			request.responseHeaders.addRawHeader(b"content-type", b"application/json")
@@ -83,10 +84,7 @@ class Resquest(resource.Resource):
 
 		try:
 			res = fs.download_file(POD_NAME, filepath)
-			if res['message'] != 'success':
-				fs.sync_pod(POD_NAME)
-				res = fs.download_file(POD_NAME, filepath)
-
+			
 			if res['message'] != 'success':
 				logging.error(f"read {filepath} from fairos error: {res['message']}")
 				return self.notFoundPage()
@@ -241,6 +239,25 @@ def check_zim_status(name, dirs):
 	except:
 		return str(res[name])
 
+def update_fairos():
+	global fs
+
+	time.sleep(60)
+
+	while True:
+		if fs is None:
+			time.sleep(60)
+			continue
+
+		res = fs.dir_present(POD_NAME, '/')
+		if res['message'] != 'success':
+			fs.update_cookie(POD_NAME)
+		
+		fs.sync_pod(POD_NAME)
+
+		time.sleep(20)
+		continue		
+
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
@@ -285,6 +302,8 @@ if __name__ == '__main__':
 	fs = init_fairos(user, password, host, version)
 	if fs is None:
 		sys.exit(-1)
+
+	thread = Thread(target = update_fairos).start()
 
 	site = server.Site(Resquest())
 	endpoint = endpoints.TCP4ServerEndpoint(reactor, 8080)
