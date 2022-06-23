@@ -80,12 +80,14 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 			res = fs.dir_present(podname, relpath)
 			if res['message'] != 'success':
 				logging.error(f"check fairos dir: {relpath} present error: {res['message']}")
+				time.sleep(5)
 				continue
 			if res['data']['present']:
 				break
 			res = fs.make_dir(podname, relpath)
 			if res['message'] != 'success':
 				logging.error(f"create fairos dir: {relpath} error: {res['message']}")
+				time.sleep(5)
 				continue
 			else:
 				break
@@ -118,6 +120,7 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 			res = fs.upload_file(podname, relpath, filepath)
 			if res['message'] != 'success':
 				logging.error(f"upload fairos file: {filepath} error: {res['message']}")
+				time.sleep(5)
 				continue
 			else:
 				break
@@ -133,19 +136,27 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 
 	#dump file status to local
 	while True:
-		pikfile = os.path.join(dirs, FILE_STATUS)
-		with open(pikfile, 'wb') as f:
-			pickle.dump(status, f)
-		break
+		try:
+			pikfile = os.path.join(src, FILE_STATUS)
+			with open(pikfile, 'wb') as f:
+				pickle.dump(status, f)
+			break
+		except:
+			time.sleep(5)
+			continue
 
 	#update status to fairos
 	while True:
 
 		if update_wikipedia_zim_status(name, timestamp, src, fs, podname) == False:
+			time.sleep(5)
 			continue
 
 		if update_wikipedia_file_status(src, fs, podname):
 			break
+		else:
+			time.sleep(5)
+			continue
 
 	return True
 
@@ -216,6 +227,7 @@ def load_wikipedia_file_status(dirs, fs, podname = POD_NAME):
 		filepath = os.path.join('/', FILE_STATUS)
 		res = fs.dir_present(podname, filepath)
 		if res['message'] != 'success':
+			time.sleep(5)
 			continue
 
 		if res['data']['present'] == False:
@@ -223,6 +235,7 @@ def load_wikipedia_file_status(dirs, fs, podname = POD_NAME):
 
 		res = fs.download_file(podname, filepath)
 		if res['message'] != 'success':
+			time.sleep(5)
 			continue
 
 		with open(pikfile, 'wb') as f:
