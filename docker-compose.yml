@@ -10,7 +10,7 @@ services:
         max-size: "10M"
     volumes:
       - bzzwikimirror:/tmp        
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -d /tmp/wikipedia/zim
+    command: -d /tmp/wikipedia/wikipedia.db
 
   bzzwikimirror-downloader:
     image: bzzwikimirror/downloader:latest
@@ -21,7 +21,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -d /tmp/wikipedia/zim
+    command: -s /tmp/wikipedia/zim -d /tmp/wikipedia/wikipedia.db
 
   bzzwikimirror-extractor:
     image: bzzwikimirror/extractor:latest
@@ -32,7 +32,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
+    command: -s /tmp/wikipedia/zim -e /tmp/wikipedia/doc -d /tmp/wikipedia/wikipedia.db
 
   bzzwikimirror-uploader:
     image: bzzwikimirror/uploader:latest
@@ -43,7 +43,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -h https://fairos.fairdatasociety.org -v v1 -u bzzwikimirror -p s7o5716mrsKS7eKD -s /tmp/wikipedia/zim -d /tmp/wikipedia/doc
+    command: -e /tmp/wikipedia/doc -d /tmp/wikipedia/wikipedia.db
 
 volumes:
   bzzwikimirror:

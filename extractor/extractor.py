@@ -7,112 +7,54 @@ import requests
 import time
 import re
 import getopt
-import enum
 import logging
-import urllib.parse
-import subprocess
-import hashlib
 import shutil
-import _pickle as pickle
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+engine = None
+Session = None
+
+class ZimStatus(Base):
+	__tablename__ = 'zim_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	size = Column(Integer)
+	status = Column(String(32), indxe = True)
+	timestamp = Column(Integer, indxe = True)
+
+class DbStatus(Base):
+	__tablename__ = 'db_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	reference = Column(String(256))
+	timestamp = Column(Integer, indxe = True)	
+
+class FileStatus(Base):
+	__tablename__ = 'file_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	ext = Column(String(32), indxe = True)
+	md5 = Column(String(256))
+	reference = Column(String(256))
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
 
+WAITING_STATUS = "waitting"
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
 UPLOADING_STATUS = "uploading"
-
-ZIM_STATUS = "zim.pik"
-FILE_STATUS = "file.pik"
+UPLOADED_STATUS = "uploaded"
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
-#parse timestamp
-def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
-
-	t = time.strptime(timestamp, timeformat)
-
-	return int(time.mktime(t))
-
-#parse file size
-def parse_size(size = 0.0):
-
-	if size < 1024:
-		return '{0} B'.format(round(size, 2))
-	else:
-		size /= 1024
-
-	if size < 1024:
-		return '{0} KB'.format(round(size, 2))
-	else:
-		size /= 1024
-
-	if size < 1024:
-		return '{0} MB'.format(round(size, 2))
-	else:
-		size /= 1024
-
-	if size < 1024:
-		return '{0} GB'.format(round(size, 2))
-	else:
-		size /= 1024
-
-	if size < 1024:
-		return '{0} TB'.format(round(size, 2))
-	else:
-		size /= 1024		
-
-	return '{0} PB'.format(round(size, 2))
-
-#get wiki zim list
-def get_wikipedia_dumps(host = WIKIPEDIA_HOST):
-
-	res = requests.get(host)
-
-	if res.status_code >= 200 and res.status_code < 300:
-		regexp = r'\>(wikipedia\S{1,}\.zim)\<\S{1,}\s{1,}(\S{1,}\s{1,}\S{1,})\s{1,}(\d{1,})'
-		return re.findall(regexp, res.text)
-	else:
-		logging.error(f"get wikipedia dumps error: {res.text}")
-
-	return None
-
-#parse wiki dumps
-def parse_wikipedia_dumps(data = []):
-
-	res = []
-
-	if data is None:
-
-		return res
-
-	for d in data:
-
-		name, timestamp, size = d
-
-		res.append([name, parse_size(float(size)), parse_timestamp(timestamp)])
-	
-	return sorted(res, key = lambda x: x[2])
-
-#check zim status
-def check_zim_status(name, dirs):
-
-	pikfile = os.path.join(dirs, ZIM_STATUS)
-
-	try:
-		with open(pikfile, 'rb') as f:
-			res = pickle.load(f) 
-	except:
-		return (None, 'open zim status file failed')
-
-	if res is None:
-		return (None, 'success')
-
-	if name not in res:
-		return (None, 'success')
-
-	try:
-		return (int(res[name]), 'success')
-	except:
-		return (str(res[name]), 'success')
 
 #extract zim file to dst dirs using zimdump
 def extract_wikipedia_zim(name, src, dst):
@@ -135,36 +77,21 @@ def extract_wikipedia_zim(name, src, dst):
 	if res != 0:
 		return False
 
-	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
-
-	return update_wikipedia_zim_status(keyname, src)
-
-#update zim file status to UPLOADING_STATUS
-def update_wikipedia_zim_status(name, dirs):
-
-	pikfile = os.path.join(dirs, ZIM_STATUS)
-
-	try:
-		with open(pikfile, 'rb') as f:
-			res = pickle.load(f)
-			res[name] = UPLOADING_STATUS
-		with open(pikfile, 'wb') as f:
-			pickle.dump(res, f)
-		return True
-	except:
-		return False
+	return True
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
 	src = '/tmp/wikipedia/zim'
-	dst = '/tmp/wikipedia/doc'
+	extract = '/tmp/wikipedia/doc'
+	dbname = '/tmp/wikipedia/wikipedia.db'
 
 	#parse agrs
 	try:
-		opts, args = getopt.getopt(argv, "d:s:", [
+		opts, args = getopt.getopt(argv, "d:e:s:", [
             "src=",
-            "dst="
+            "extract=",
+            "dbname"
         ])
 	except:
 		logging.error("parse arguments failed")
@@ -173,46 +100,48 @@ if __name__ == '__main__':
 	for opt, arg in opts:
 		if opt in ['--src', '-s']:
 			src = arg
-		elif opt in ['--dst', '-d']:
-			dst = arg
+		elif opt in ['--extract', '-e']:
+			extract = arg
+		elif opt in ['--dbname', '-d']:
+			dbname = arg			
 
 	#make dst dirs
 	try:
-		os.makedirs(dst)
+		os.makedirs(extract)
 	except:
-		if not os.path.exists(dst):
-			logging.error(f"make extract dirs: {dst} failed")
+		if not os.path.exists(extract):
+			logging.error(f"make extract dirs: {extract} failed")
 			sys.exit(-1)
+
+	#create new sqlite engine
+	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=False)
+
+	#create Session maker
+	Session = sessionmaker(bind = engine)
 
 	while True:
 
-		#get all zim file list from the dump website
-		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
-		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
+		session = Session()
 
-		#check zim file one by one based on the zim timestamp from oldest to newest
-		for d in dumps:
-
-			name, size, timestamp = d
-
-			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
-
-			status, err = check_zim_status(keyname, src)
-
-			if err != 'success':
-				logging.error(f"check zim: {name} status error: {err}")
-				break
-			elif status == EXTRACTING_STATUS:
-				res = extract_wikipedia_zim(name, src, dst)
-				if res:
-					logging.info(f"extract zim: {name} to {dst} success")
-					shutil.rmtree(os.path.join(src, name))
-				else:
-					logging.warning(f"extract zim: {name} to {dst} failed")
-				break
-			elif status == '' or status is None:
-				break
-			else:
+		try:
+			zimInfo = session.query(ZimStatus).filter(ZimStatus.status == EXTRACTING_STATUS).order_by(ZimStatus.timestamp).first();
+			if zimInfo is None:
+				session.close()
+				logging.info("no zim files need to extract")
+				time.sleep(120)
 				continue
+			else:
+				res = extract_wikipedia_zim(zimInfo.name, src, extract)
+				if res:
+					zimInfo.status = UPLOADING_STATUS
+					session.commit()
+					shutil.rmtree(os.path.join(src, zimInfo.name))
+					logging.info(f"update zim file: {zimInfo.name} status to {zimInfo.status} success")
+				else:
+					logging.error(f"update zim file: {zimInfo.name} status to {zimInfo.status} failed")
+		except:
+			session.rollback()
+		finally:
+			session.close()
 
 		time.sleep(120)

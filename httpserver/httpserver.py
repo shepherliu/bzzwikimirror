@@ -6,35 +6,64 @@ import json
 import time
 import re
 import getopt
-import enum
 import logging
 import mimetypes
 import requests
-import urllib.parse
 import hashlib
-import _pickle as pickle
+
 from threading import Thread
+
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
 
-from fairos.fairos import Fairos
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import desc
+
+Base = declarative_base()
+
+engine = None
+Session = None
+
+class ZimStatus(Base):
+	__tablename__ = 'zim_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	size = Column(Integer)
+	status = Column(String(32), indxe = True)
+	timestamp = Column(Integer, indxe = True)
+
+class DbStatus(Base):
+	__tablename__ = 'db_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	reference = Column(String(256))
+	timestamp = Column(Integer, indxe = True)	
+
+class FileStatus(Base):
+	__tablename__ = 'file_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	ext = Column(String(32), indxe = True)
+	md5 = Column(String(256))
+	reference = Column(String(256))
+
+SWARM_HOST = 'http://127.0.0.1:1635'
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
 
-FAIROS_HOST = "https://fairos.fairdatasociety.org"
+WAITING_STATUS = "waitting"
+DOWNLOADING_STATUS = "downloading" 
+EXTRACTING_STATUS = "extracting"
+UPLOADING_STATUS = "uploading"
+UPLOADED_STATUS = "uploaded"
 
-FAIROS_VERSION = 'v1'
-
-POD_NAME = 'wikimedia_zim'
-
-ZIM_STATUS = "zim.pik"
-FILE_STATUS = "file.pik"
-
-fs = None
 root = '/dist'
-
-zimStatus = {}
-fileList = []
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
 
@@ -46,20 +75,26 @@ class Resquest(resource.Resource):
 
 		path = request.path.decode('utf-8').split('?')[0]
 
-		if path.startswith('/api/zimlist'):
-			request.responseHeaders.addRawHeader(b"content-type", b"application/json")
-			return self.getZimListInfo()
-		elif path.startswith('/api/zimstatus'):
-			relpath = os.path.relpath(path, '/api/zimstatus')
-			request.responseHeaders.addRawHeader(b"content-type", b"application/json")
-			return self.getZimFileStatus(relpath)
-		elif path.startswith('/api/filelist'):
-			relpath = os.path.relpath(path, '/api/filelist')
-		elif path.startswith('/api/filesearch'):
-			relpath = os.path.relpath(path, '/api/filesearch')
-		elif path.startswith('/api/contentsearch'):
-			relpath = os.path.relpath(path, '/api/contentsearch')
+		if path.startswith('/api/'):
 
+			if path.startswith('/api/zimlist'):
+				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
+				return self.getZimListInfo()
+			elif path.startswith('/api/dbname'):
+				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
+				return self.getDbname()
+			elif path.startswith('/api/filelist'):
+				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
+				relpath = os.path.relpath(path, '/api/filelist')
+				return self.getFileList(relpath)
+			elif path.startswith('/api/filesearch'):
+				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
+				relpath = os.path.relpath(path, '/api/filesearch')
+				return self.getFileSearch(relpath)
+			elif path.startswith('/api/contentsearch'):
+				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
+				relpath = os.path.relpath(path, '/api/contentsearch')
+				return self.getContentSearch(relpath)
 
 		if path == '/':
 			path = '/index.html'
@@ -73,12 +108,12 @@ class Resquest(resource.Resource):
 		request.responseHeaders.addRawHeader(b"content-type", types.encode('utf-8'))
 
 		if os.path.isfile(localpath):
-			return self.getFileFromLocal(localpath, types)
+			return self.getFileFromLocal(localpath)
 		else:
-			return self.getFileFromFairOs(path, types)
+			return self.getFileFromSwarm(path)
 
 	#read file from local system
-	def getFileFromLocal(self, filepath:str, types:str):
+	def getFileFromLocal(self, filepath:str):
 		try:
 			with open(filepath, 'rb') as f:
 				content = f.read()
@@ -87,44 +122,67 @@ class Resquest(resource.Resource):
 			return self.notFoundPage()
 
 	#read file from fair os
-	def getFileFromFairOs(self, filepath:str, types:str):
-		global fs
+	def getFileFromSwarm(self, filepath:str):
+		session = Session()
 
 		try:
-			res = fs.download_file(POD_NAME, filepath)
+			fileInfo = session.query(FileStatus).filter(FileStatus.name == filepath).first()
+			if fileInfo is None:
+				session.close()
+				return self.notFoundPage
+
+			url = f"{SWARM_HOST}/bzz/{fileInfo.reference}"
+
+			res = requests.get(url)
 			
-			if res['message'] != 'success':
-				logging.error(f"read {filepath} from fairos error: {res['message']}")
+			if res.status_code >= 200 and res.status_code < 300:
+				session.close()
+				return res.content
+			else:
+				logging.error(f"read {filepath} from swarm error: {res.text}")
+				session.close()
 				return self.notFoundPage()
-			
-			return res['content']
 		except:
+			session.close()
 			return self.notFoundPage()
 
 	#get zim list info
 	def getZimListInfo(self):
 		zimlist = []
-		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
-		for d in dumps:
-			name, size, timestamp = d
-			zimlist.append({
-				'name':name,
-				'size':size,
-				'timestamp':timestamp,
-				'status':''
-			})
+		session = Session()
+
+		try:
+			zimInfos = session.query(ZimStatus).order_by(ZimStatus.timestamp).all();
+			if zimInfos not None:
+				for info in zimInfos:
+					zimlist.append({
+						'name': info.name,
+						'size': parse_size(info.size),
+						'timestamp': parse_timestamp(info.timestamp),
+						'status': info.status
+					})
+		except:
+			zimlist = []
+		finally:
+			session.close()
 		
 		return json.dumps(zimlist).encode('utf-8')
 
-	#get zim file status
-	def getZimFileStatus(self, name:str):
+	#get latest db info
+	def getDbname(self):
+		session = Session()
 
-		keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
-		status = {
-			'name': check_zim_status(keyname)
-		}
-
-		return json.dumps(status).encode('utf-8')
+		try:
+			dbInfo = session.query(DbStatus).order_by(desc(DbStatus.timestamp)).first()
+			if dbInfo is None:
+				session.close()
+				return json.dumps({}).encode('utf-8')
+			else:
+				session.close()
+				return json.dumps({'name': dbInfo.name, 'reference': dbInfo.reference, 'timestamp': dbInfo.timestamp}).encode('utf-8')
+		except:
+			session.close()
+			return json.dumps({}).encode('utf-8')
 
 	#get file list
 	def getFileList(self, path):
@@ -142,16 +200,25 @@ class Resquest(resource.Resource):
 			except:
 				pageCount = 0
 
-		start = pageCount * pageSize
-		end = start + pageSize
+		offset = pageCount * pageSize
 
-		if end > len(filelist):
-			end = len(fileList)
+		fileList = []
+		session = Session()
 
-		if start > end:
-			start = end
+		try:
+			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'html').order_by(FileStatus.name).offset(offset).limit(pageSize).all()
+			if fileInfos not None:
+				for info in fileInfos:
+					fileList.append({
+						'name': os.path.basename(info.name),
+						'link': f"{SWARM_HOST}/bzz/{info.reference}"
+					})
+		except:
+			fileList = []
+		finally:
+			session.close()
 
-		return json.dumps(fileList[start:end]).encode('utf-8')
+		return json.dumps(fileList).encode('utf-8')
 
 	#get file search
 	def getFileSearch(self, path):
@@ -171,25 +238,25 @@ class Resquest(resource.Resource):
 				pageCount = int(params[2])
 			except:
 				pageCount = 0
-		start = pageCount * pageSize
-		end = start + pageSize
+		offset = pageCount * pageSize
 
-		total = 0
-		tmp = []
-		for key in fileList:
-			if search == '' or key.find(search) >= 0:
-				tmp.append(key)
-				total += 1
-			if totalcnt >= end:
-				break
+		fileList = []
+		session = Session()
 
-		if end > len(tmp):
-			end = len(tmp)
+		try:
+			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'html').filter(FileStatus.name.like(f"%{search}%")).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
+			if fileInfos not None:
+				for info in fileInfos:
+					fileList.append({
+						'name': os.path.basename(info.name),
+						'link': f"{SWARM_HOST}/bzz/{info.reference}"
+					})
+		except:
+			fileList = []
+		finally:
+			session.close()		
 
-		if start > end:
-			start = end		
-
-		return json.dumps(tmp[start:end]).encode('utf-8')
+		return json.dumps(fileList).encode('utf-8')
 
 	#get content search
 	def getContentSearch(self, path):
@@ -209,75 +276,34 @@ class Resquest(resource.Resource):
 				pageCount = int(params[2])
 			except:
 				pageCount = 0
-		start = pageCount * pageSize
-		end = start + pageSize
+		offset = pageCount * pageSize
 
-		total = 0
-		tmp = []		
-		
-		return json.dumps(tmp[start:end]).encode('utf-8')
+		fileList = []
+		session = Session()
+
+		try:
+			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'html').filter(FileStatus.name.like(f"%{search}%")).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
+			if fileInfos not None:
+				for info in fileInfos:
+					fileList.append({
+						'name': os.path.basename(info.name),
+						'link': f"{SWARM_HOST}/bzz/{info.reference}"
+					})
+		except:
+			fileList = []
+		finally:
+			session.close()		
+
+		return json.dumps(fileList).encode('utf-8')
 
 	#not found page
 	def notFoundPage(self):
 		return f"file is not found".encode('utf-8')
 
-#init fairos module
-def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME, sharepod = ''):
-
-	fs = Fairos(host, version)
-
-	#check user present
-	userPresent = False
-
-	res = fs.user_present(username)
-
-	if res['message'] != 'success':
-		logging.error(f"get user: {username} status error: {res['message']}")
-		return None
-	else:
-		userPresent = res['data']['present']
-
-	#signup user if not exists
-	if not userPresent:
-
-		res = fs.signup_user(username, password)
-
-		if res['message'] != 'success':
-			logging.error(f"signup user: {username} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"signup user: {username} success")
-
-	#login user
-	res = fs.login_user(username, password)
-
-	if res['message'] != 'success':
-		logging.error(f"login user: {username} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"login user: {username} success")
-
-	#receive shared pod
-	if sharepod != '':
-		res = fs.pod_receive(sharepod)
-
-	#open pod
-	res = fs.open_pod(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"open pod: {podname} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"open pod: {podname} success")
-	
-	return fs
-
 #parse timestamp
-def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
+def parse_timestamp(timestamp):
 
-	t = time.strptime(timestamp, timeformat)
-
-	return int(time.mktime(t))
+	return time.strftime("%d-%b-%Y %H:%M", time.ctime(timestamp))
 
 #parse file size
 def parse_size(size = 0.0):
@@ -309,149 +335,38 @@ def parse_size(size = 0.0):
 
 	return '{0} PB'.format(round(size, 2))
 
-#get wiki zim list
-def get_wikipedia_dumps(host = WIKIPEDIA_HOST):
-
-	res = requests.get(host)
-
-	if res.status_code >= 200 and res.status_code < 300:
-		regexp = r'\>(wikipedia\S{1,}\.zim)\<\S{1,}\s{1,}(\S{1,}\s{1,}\S{1,})\s{1,}(\d{1,})'
-		return re.findall(regexp, res.text)
-	else:
-		logging.error(f"get wikipedia dumps error: {res.text}")
-
-	return None
-
-#parse wiki dumps
-def parse_wikipedia_dumps(data = []):
-
-	res = []
-
-	if data is None:
-
-		return res
-
-	for d in data:
-
-		name, timestamp, size = d
-
-		res.append([name, parse_size(float(size)), timestamp])
-	
-	return sorted(res, key = lambda x: parse_timestamp(x[2]))
-
-#check zim status
-def check_zim_status(name):
-
-	global zimStatus
-
-	if zimStatus is None:
-		return 'waiting'
-
-	if name not in zimStatus:
-		return 'waiting'
-
-	try:
-		if int(zimStatus[name]) > 0:
-			return 'uploaded'
-		else:
-			return 'waiting'
-	except:
-		return str(zimStatus[name])
-
-def update_fairos():
-	global fs
-
-	time.sleep(120)
-
-	while True:
-
-		try:
-			res = fs.dir_present(POD_NAME, '/')
-			if res['message'] != 'success':
-				fs.update_cookie(POD_NAME)
-
-			time.sleep(5)
-		except:
-			time.sleep(5)
-			continue	
-
-def update_status():
-	global fs
-	global zimStatus
-	global fileList
-
-	zimpath = os.path.join('/', ZIM_STATUS)
-	filepath = os.path.join('/', FILE_STATUS)
-
-	while True:
-		try:
-			fs.sync_pod(POD_NAME)
-
-			res = fs.download_file(POD_NAME, zimpath)
-			if res['message'] == 'success':
-				zimStatus = json.loads(res['content'])
-
-			res = fs.download_file(POD_NAME, filepath)
-			if res['message'] == 'success':
-				data = json.loads(res['content'])
-				tmp = []
-				for key in data.keys():
-					if key.find('/A/') >= 0:
-						tmp.append(key)
-				fileList = tmp
-
-			time.sleep(3600)
-		except:
-			time.sleep(120)
-			continue
-
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
-	host = FAIROS_HOST
-	version = FAIROS_VERSION
-	user = ''
-	password = ''
-	etcdhost = ''
 	root = '/dist'
-	sharepod = ''
+	dbname = '/tmp/wikipedia/wikipedia.db'
 
 	try:
-		opts, args = getopt.getopt(argv, "h:v:u:p:r:s:", [
+		opts, args = getopt.getopt(argv, "d:h:r:", [
+			"dbname",
 			"host=",
-			"version=",
-            "user=",
-            "password=",
-            "root=",
-            "sharepod="
+			"root="
         ])
 	except:
 		logging.error("parse arguments failed")
 		sys.exit(-1)
 
 	for opt, arg in opts:
-		if opt in ['--host','-h']:
-			host = arg		
-		elif opt in ['--version','-v']:
-			version = arg
-		elif opt in ['--user','-u']:
-			user = arg
-		elif opt in ['--password','-p']:
-			password = arg
-		elif opt in ['--root', '-r']:
+		if opt in ['--root', '-r']:
 			root = arg
-		elif opt in ['--sharepod', '-s']:
-			sharepod = arg			
+		elif opt in ['--host', '-h']:
+			SWARM_HOST = arg				
+		elif opt in ['--dbname', '-d']:
+			dbname = arg			
 
 	if not os.path.exists(root):
 		os.makedirs(root)
 
-	fs = init_fairos(user, password, host, version, POD_NAME, sharepod)
-	if fs is None:
-		sys.exit(-1)
+	#create new sqlite engine
+	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=False)
 
-	Thread(target = update_fairos).start()
-	Thread(target = update_status).start()
+	#create Session maker
+	Session = sessionmaker(bind = engine)
 
 	site = server.Site(Resquest())
 	endpoint = endpoints.TCP4ServerEndpoint(reactor, 8080)

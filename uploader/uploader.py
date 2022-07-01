@@ -6,143 +6,74 @@ import json
 import requests
 import time
 import re
+import mimetypes
 import getopt
-import enum
 import logging
-import urllib.parse
 import hashlib
 import pathlib
 import shutil
-import _pickle as pickle
-from threading import Thread
+from requests_toolbelt import MultipartEncoder
 
-from fairos.fairos import Fairos
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+engine = None
+Session = None
+
+class ZimStatus(Base):
+	__tablename__ = 'zim_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	size = Column(Integer)
+	status = Column(String(32), indxe = True)
+	timestamp = Column(Integer, indxe = True)
+
+class DbStatus(Base):
+	__tablename__ = 'db_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	reference = Column(String(256))
+	timestamp = Column(Integer, indxe = True)
+
+class FileStatus(Base):
+	__tablename__ = 'file_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	ext = Column(String(32), indxe = True)
+	md5 = Column(String(256))
+	reference = Column(String(256))
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
 
-FAIROS_HOST = "https://fairos.fairdatasociety.org"
+SWARM_HOST = 'http://127.0.0.1:1635'
+SWARM_BATCH_ID = ''
 
-FAIROS_VERSION = 'v1'
-
-POD_NAME = 'wikimedia_zim'
-
+WAITING_STATUS = "waitting"
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
 UPLOADING_STATUS = "uploading"
-
-ZIM_STATUS = "zim.pik"
-FILE_STATUS = "file.pik"
+UPLOADED_STATUS = "uploaded"
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
-#init fairos module
-def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME):
 
-	fs = Fairos(host, version)
-
-	#check user present
-	userPresent = False
-
-	res = fs.user_present(username)
-
-	if res['message'] != 'success':
-		logging.error(f"get user: {username} status error: {res['message']}")
-		return None
-	else:
-		userPresent = res['data']['present']
-
-	#signup user if not exists
-	if not userPresent:
-
-		res = fs.signup_user(username, password)
-
-		if res['message'] != 'success':
-			logging.error(f"signup user: {username} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"signup user: {username} success")
-
-	#login user
-	res = fs.login_user(username, password)
-
-	if res['message'] != 'success':
-		logging.error(f"login user: {username} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"login user: {username} success")
-
-	#check pod presnet
-	podPresent = False
-
-	res = fs.pod_present(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"get pod: {podname} status error: {res['message']}")
-		return None
-	else:
-		podPresent = res['data']['present']
-
-	#create a new pod if not exists
-	if not podPresent:
-
-		res = fs.new_pod(podname)
-
-		if res['message'] != 'success':
-			logging.error(f"create new pod: {podname} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"create new pod: {podname} success")
-
-	#open pod
-	res = fs.open_pod(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"open pod: {podname} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"open pod: {podname} success")
-
-	res = fs.share_pod(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"share pod: {podname} error: {res['message']}")
-	else:
-		logging.info(f"share pod: {podname} success, pod sharing reference: {res['data']['pod_sharing_reference']}")
-	
-	return fs
-
-#upload all files of the dirs to fairos
-def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME):
+#upload all files to swarm
+def upload_files(name:str, dirs:str):
 	totalcnt = 0
 	filelist = []
 
-	fairpath = os.path.join('/', hashlib.md5(name.encode('utf-8')).hexdigest())
-
-	fs.make_dir(podname, fairpath)
-
 	rootpath = os.path.join(dirs, name)
-
-	status = load_wikipedia_file_status(src, fs, podname)
 
 	#collect file list for the dir
 	for root, _, files in os.walk(rootpath):
 		relpath = os.path.relpath(root, rootpath)
 		relpath = os.path.join(fairpath, relpath)
-
-		while True:
-			res = fs.dir_present(podname, relpath)
-			if res['message'] != 'success':
-				logging.error(f"check fairos dir: {relpath} present error: {res['message']}")
-				time.sleep(5)
-				continue
-			if res['data']['present']:
-				break
-			res = fs.make_dir(podname, relpath)
-			if res['message'] != 'success':
-				logging.error(f"create fairos dir: {relpath} error: {res['message']}")
-				time.sleep(5)
-				continue
-			else:
-				break
 
 		for file in files:
 			filepath = os.path.join(root, file)
@@ -152,298 +83,156 @@ def upload_files(name:str, dirs:str, timestamp:int, src, fs, podname = POD_NAME)
 	for filepath in filelist:
 		#check if already upload or not
 		relpath = os.path.relpath(os.path.dirname(filepath), rootpath)
-		relpath = os.path.join(fairpath, relpath)	
+		relpath = os.path.join('/', relpath)	
 
 		basename = os.path.basename(filepath)
-		# extname = pathlib.Path(filepath).suffix
-		# basename = hashlib.md5(filepath).hexdigest() + extname
 
-		relname = os.path.join(relpath, basename)	
+		relname = os.path.join(relpath, basename)
+
+		ext = 'other'
+		if relpath.find('/A/'):
+			ext = 'html'	
 
 		md5sum = ''
 		with open(filepath, 'rb') as f:
 			md5sum = hashlib.md5(f.read()).hexdigest()
-		if check_file_status(relname, md5sum, status):
-			totalcnt += 1
-			continue
 
-		#upload file until it is success
 		while True:
-			res = fs.upload_file(podname, relpath, filepath)
-			if res['message'] != 'success':
-				logging.error(f"upload fairos file: {filepath} error: {res['message']}")
-				time.sleep(5)
-				continue
-			else:
-				break
+			session = Session()
+			try:
+				fileInfo = session.query(FileStatus).filter(FileStatus.name == relname).first()
+				if fileInfo not None and fileInfo.md5 == md5sum:
+					totalcnt += 1
+					session.close()
+					break
 
-		#update file status
-		status = update_file_status(relname, md5sum, status)
-		totalcnt += 1
-		logging.info(f"upload fairos file: {filepath} success, total process: {totalcnt}/{len(filelist)}")
+				reference = upload_file_to_swarm(filepath)
+				#try again
+				if reference is None:
+					logging.warning(f"upload file: {filepath} to swarm failed")
+					session.close()
+					time.sleep(5)
+					continue
+
+				if fileInfo is None:
+					session.add(FileStatus(name = relname, ext = ext, md5 = md5sum, reference = reference))
+				else:
+					fileInfo.md5 = md5sum
+					fileInfo.reference = reference
+				
+				session.commit()
+				totalcnt += 1
+				logging.info(f"upload file: {filepath} success, total process: {totalcnt}/{len(filelist)}")
+			except:
+				session.rollback()
+			finally:
+				session.close()
 
 	#if all files upload success, update the status of the zim file status
 	if totalcnt < len(filelist):
 		return False
 
-	#dump file status to local
-	while True:
-		try:
-			pikfile = os.path.join(src, FILE_STATUS)
-			with open(pikfile, 'wb') as f:
-				pickle.dump(status, f)
-			break
-		except:
-			time.sleep(5)
-			continue
-
-	#update status to fairos
-	while True:
-
-		if update_wikipedia_zim_status(name, timestamp, src, fs, podname) == False:
-			time.sleep(5)
-			continue
-
-		if update_wikipedia_file_status(src, fs, podname):
-			break
-		else:
-			time.sleep(5)
-			continue
-
 	return True
 
-#check file status
-def check_file_status(filepath:str, md5sum:str, status):
+def upload_file_to_swarm(filepath):
+	basename = os.path.basename(filepath)
 
-	# keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
+	types, encoding = mimetypes.guess_type(filepath)
 
-	if filepath not in status:
-		return False
+	m = MultipartEncoder(fields = {
+		'name': basename,
+		'file': (basename, open(filepath, 'rb'), types)
+	})
 
-	return str(status[filepath]) == md5sum
+	headers = {
+		'Content-Type': m.content_type,
+		'swarm-postage-batch-id': SWARM_BATCH_ID,
+		'swarm-collection': False
+	}
 
-#update file status
-def update_file_status(filepath:str, md5sum:str, status):
-
-	# keyname = hashlib.md5(filepath.encode('utf-8')).hexdigest()
-
-	status[filepath] = md5sum
-
-	return status
-
-#update zim file status
-def update_wikipedia_zim_status(name:str, timestamp:int, dirs, fs, podname = POD_NAME):
-
-	keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
-
-	pikfile = os.path.join(dirs, ZIM_STATUS)
-
-	try:
-		with open(pikfile, 'rb') as f:
-			res = pickle.load(f)
-			res[keyname] = timestamp
-		with open(pikfile, 'wb') as f:
-			pickle.dump(res, f)
-		res = fs.upload_file(podname, '/', pikfile)
-		if res['message'] != 'success':
-			return False
-		return True
-	except:
-		return False
-
-#update file status to fairos
-def update_wikipedia_file_status(dirs, fs, podname = POD_NAME):
-
-	pikfile = os.path.join(dirs, FILE_STATUS)
-
-	try:
-		res = fs.upload_file(podname, '/', pikfile)
-		if res['message'] != 'success':
-			return False
-		return True
-	except:
-		return False
-
-def load_wikipedia_file_status(dirs, fs, podname = POD_NAME):
-
-	while True:
-		pikfile = os.path.join(dirs, FILE_STATUS)
-		if os.path.isfile(pikfile):
-			with open(pikfile, 'rb') as f:
-				return pickle.load(f)
-
-		filepath = os.path.join('/', FILE_STATUS)
-		res = fs.dir_present(podname, filepath)
-		if res['message'] != 'success':
-			time.sleep(5)
-			continue
-
-		if res['data']['present'] == False:
-			return {}
-
-		res = fs.download_file(podname, filepath)
-		if res['message'] != 'success':
-			time.sleep(5)
-			continue
-
-		with open(pikfile, 'wb') as f:
-			f.write(res['content'])
-
-		with open(pikfile, 'rb') as f:
-			return pickle.load(f)
-
-#check zim status
-def check_zim_status(name, dirs):
-
-	pikfile = os.path.join(dirs, ZIM_STATUS)
-
-	try:
-		with open(pikfile, 'rb') as f:
-			res = pickle.load(f) 
-	except:
-		return (None, 'open zim status file failed')
-
-	if res is None:
-		return (None, 'success')
-
-	if name not in res:
-		return (None, 'success')
-
-	try:
-		return (int(res[name]), 'success')
-	except:
-		return (str(res[name]), 'success')
-
-#parse timestamp
-def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
-
-	t = time.strptime(timestamp, timeformat)
-
-	return int(time.mktime(t))
-
-#get wiki zim list
-def get_wikipedia_dumps(host = WIKIPEDIA_HOST):
-
-	res = requests.get(host)
+	res = requests.post(url = f"{SWARM_HOST}/bzz/", headers = headers , cookies = cookies, data = m)
 
 	if res.status_code >= 200 and res.status_code < 300:
-		regexp = r'\>(wikipedia\S{1,}\.zim)\<\S{1,}\s{1,}(\S{1,}\s{1,}\S{1,})\s{1,}(\d{1,})'
-		return re.findall(regexp, res.text)
-	else:
-		logging.error(f"get wikipedia dumps error: {res.text}")
+		try:
+			return res.json().reference
+		except:
+			return None
 
 	return None
 
-#parse wiki dumps
-def parse_wikipedia_dumps(data = []):
-
-	res = []
-
-	if data is None:
-
-		return res
-
-	for d in data:
-
-		name, timestamp, size = d
-
-		res.append([name, size, parse_timestamp(timestamp)])
-	
-	return sorted(res, key = lambda x: x[2])	
-
-def update_fairos():
-	global fs
-
-	time.sleep(120)
-
-	while True:
-
-		try:
-			res = fs.dir_present(POD_NAME, '/')
-			if res['message'] != 'success':
-				fs.update_cookie(POD_NAME)
-			
-			time.sleep(20)
-		except:
-			time.sleep(20)
-			continue	
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
-	host = FAIROS_HOST
-	version = FAIROS_VERSION
-	user = ''
-	password = ''
-	src = '/tmp/wikipedia/zim'
-	dirs = '/tmp/wikipedia/doc'
+	extract = '/tmp/wikipedia/doc'
+	dbname = '/tmp/wikipedia/wikipedia.db'
 
-	#parse args
+	#parse agrs
 	try:
-		opts, args = getopt.getopt(argv, "h:v:u:p:d:s:", [
+		opts, args = getopt.getopt(argv, "b:d:e:h:", [
+			"batchid=",
 			"host=",
-			"version=",
-            "user=",
-            "password=",
-            "dirs=",
-            "src="
+            "extract=",
+            "dbname"
         ])
 	except:
 		logging.error("parse arguments failed")
 		sys.exit(-1)
 
 	for opt, arg in opts:
-		if opt in ['--host','-h']:
-			host = arg
-		elif opt in ['--version','-v']:
-			version = arg
-		elif opt in ['--user','-u']:
-			user = arg
-		elif opt in ['--password','-p']:
-			password = arg
-		elif opt in ['--dirs', '-d']:
-			dirs = arg
-		elif opt in ['--src', '-s']:
-			src = arg
+		if opt in ['--extract', '-e']:
+			extract = arg
+		elif opt in ['--dbname', '-d']:
+			dbname = arg	
+		elif opt in ['--batchid', '-b']:
+			SWARM_BATCH_ID = arg	
+		elif opt in ['--host', '-h']:
+			SWARM_HOST = arg									
 
-	fs = init_fairos(user, password, host, version)
+	#make dst dirs
+	try:
+		os.makedirs(extract)
+	except:
+		if not os.path.exists(extract):
+			logging.error(f"make extract dirs: {extract} failed")
+			sys.exit(-1)
 
-	if fs is None:
-		sys.exit(-1)
+	#create new sqlite engine
+	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=False)
 
-	thread = Thread(target = update_fairos).start()
+	#create Session maker
+	Session = sessionmaker(bind = engine)
 
 	while True:
 
-		#get all zim file list from the dump website
-		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
-		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
+		session = Session()
 
-		#check zim file one by one based on the zim timestamp from oldest to newest
-		for d in dumps:
-
-			name, size, timestamp = d
-
-			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
-
-			status, err = check_zim_status(keyname, src)
-
-			if err != 'success':
-				logging.error(f"check zim: {name} status error: {err}")
-				break
-			elif status == UPLOADING_STATUS:
-				res = upload_files(name, dirs, timestamp, src, fs, POD_NAME)
-				if res == False:
-					logging.warning(f"upload zim: {name} to {dirs} failed")
-					break
-				else:
-					logging.info(f"upload zim: {name} to {dirs} success")
-					shutil.rmtree(os.path.join(src, name))
-					shutil.rmtree(os.path.join(dirs, name))
-					continue
-			elif status == '' or status is None:
-				break
-			else:
+		try:
+			zimInfo = session.query(ZimStatus).filter(ZimStatus.status == UPLOADING_STATUS).order_by(ZimStatus.timestamp).first();
+			if zimInfo is None:
+				session.close()
+				logging.info("no zim files need to upload")
+				time.sleep(120)
 				continue
+			else:
+				res = upload_files(zimInfo.name, extract)
+				if res:
+					zimInfo.status = UPLOADED_STATUS
+					session.commit()
+					logging.info(f"update zim file: {zimInfo.name} status to {zimInfo.status} success")
+					shutil.rmtree(os.path.join(extract, zimInfo.name))
 
-		time.sleep(120)
+					reference = upload_file_to_swarm(dbname)
+					if reference is None:
+						logging.error(f"update dbname: {dbname} to swarm failed")
+					else:		
+						session.add(DbStatus(name = dbname, reference = reference, timestamp = int(time.time())))
+						logging.info(f"update dbname: {dbname} to swarm success, new reference is: {reference}")			
+				else:
+					logging.error(f"update zim file: {zimInfo.name} status to {zimInfo.status} failed")
+		except:
+			session.rollback()
+		finally:
+			session.close()
+
+		time.sleep(120)			

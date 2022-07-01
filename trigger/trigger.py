@@ -7,105 +7,48 @@ import requests
 import time
 import re
 import getopt
-import enum
 import logging
 import urllib.parse
-import hashlib
-import _pickle as pickle
 
-from fairos.fairos import Fairos
+from threading import Thread
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+engine = None
+Session = None
+
+class ZimStatus(Base):
+	__tablename__ = 'zim_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	size = Column(Integer)
+	status = Column(String(32), indxe = True)
+	timestamp = Column(Integer, indxe = True)
+
+class DbStatus(Base):
+	__tablename__ = 'db_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	reference = Column(String(256))
+	timestamp = Column(Integer, indxe = True)
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
 
-FAIROS_HOST = "https://fairos.fairdatasociety.org"
-
-FAIROS_VERSION = 'v1'
-
-POD_NAME = 'wikimedia_zim'
-
+WAITING_STATUS = "waitting"
 DOWNLOADING_STATUS = "downloading" 
 EXTRACTING_STATUS = "extracting"
 UPLOADING_STATUS = "uploading"
-
-ZIM_STATUS = "zim.pik"
-FILE_STATUS = "file.pik"
+UPLOADED_STATUS = "uploaded"
 
 logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=logging.INFO)
-#init fairos module
-def init_fairos(username, password, host = FAIROS_HOST, version = FAIROS_VERSION, podname = POD_NAME):
 
-	fs = Fairos(host, version)
-
-	#check user present
-	userPresent = False
-
-	res = fs.user_present(username)
-
-	if res['message'] != 'success':
-		logging.error(f"get user: {username} status error: {res['message']}")
-		return None
-	else:
-		userPresent = res['data']['present']
-
-	#signup user if not exists
-	if not userPresent:
-
-		res = fs.signup_user(username, password)
-
-		if res['message'] != 'success':
-			logging.error(f"signup user: {username} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"signup user: {username} success")
-
-	#login user
-	res = fs.login_user(username, password)
-
-	if res['message'] != 'success':
-		logging.error(f"login user: {username} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"login user: {username} success")
-
-	#check pod presnet
-	podPresent = False
-
-	res = fs.pod_present(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"get pod: {podname} status error: {res['message']}")
-		return None
-	else:
-		podPresent = res['data']['present']
-
-	#create a new pod if not exists
-	if not podPresent:
-
-		res = fs.new_pod(podname)
-
-		if res['message'] != 'success':
-			logging.error(f"create new pod: {podname} error: {res['message']}")
-			return None
-		else:
-			logging.info(f"create new pod: {podname} success")
-
-	#open pod
-	res = fs.open_pod(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"open pod: {podname} error: {res['message']}")
-		return None
-	else:
-		logging.info(f"open pod: {podname} success")
-
-	res = fs.share_pod(podname)
-
-	if res['message'] != 'success':
-		logging.error(f"share pod: {podname} error: {res['message']}")
-	else:
-		logging.info(f"share pod: {podname} success, pod sharing reference: {res['data']['pod_sharing_reference']}")
-	
-	return fs
 #parse timestamp
 def parse_timestamp(timestamp, timeformat = '%d-%b-%Y %H:%M'):
 
@@ -119,27 +62,27 @@ def parse_size(size = 0.0):
 	if size < 1024:
 		return '{0} B'.format(round(size, 2))
 	else:
-		size /= 1024
+		size /= 1024.0
 
-	if size < 1024:
+	if size < 1024.0:
 		return '{0} KB'.format(round(size, 2))
 	else:
-		size /= 1024
+		size /= 1024.0
 
 	if size < 1024:
 		return '{0} MB'.format(round(size, 2))
 	else:
-		size /= 1024
+		size /= 1024.0
 
 	if size < 1024:
 		return '{0} GB'.format(round(size, 2))
 	else:
-		size /= 1024
+		size /= 1024.0
 
 	if size < 1024:
 		return '{0} TB'.format(round(size, 2))
 	else:
-		size /= 1024		
+		size /= 1024.0		
 
 	return '{0} PB'.format(round(size, 2))
 
@@ -169,166 +112,96 @@ def parse_wikipedia_dumps(data = []):
 
 		name, timestamp, size = d
 
-		res.append([name, parse_size(float(size)), parse_timestamp(timestamp)])
+		res.append([name, size, parse_timestamp(timestamp)])
 	
 	return sorted(res, key = lambda x: x[2])
 
-#check zim status
-def check_zim_status(name, dirs):
-	pikfile = os.path.join(dirs, ZIM_STATUS)
+#update zim dump list
+def update_zim_dump_list():
+	while True:
 
-	try:
-		with open(pikfile, 'rb') as f:
-			res = pickle.load(f) 
-	except:
-		res = {}
-
-	if res is None:
-		return (None, 'success')
-
-	if name not in res:
-		return (None, 'success')
-
-	try:
-		return (int(res[name]), 'success')
-	except:
-		return (str(res[name]), 'success')
-
-def download_zim_status_file(dirs, fs, podname = POD_NAME):
-	pikfile = os.path.join(dirs, ZIM_STATUS)
-
-	zimpath = os.path.join('/', ZIM_STATUS)
-
-	res = fs.dir_present(podname, zimpath)
-	if res['message'] != 'success':
-		return False
-
-	if res['data']['present'] == False:
-		return True
-
-	res = fs.download_file(podname, zimpath)
-	if res['message'] != 'success':
-		return False
-
-	try:
-		with open(pikfile, 'wb') as f:
-			f.write(res['content'])
-		return True
-	except:
-		return False
-
-
-#update zim file status to DOWNLOADING_STATUS
-def trigger_wikipedia_update(name, dirs):
-
-	pikfile = os.path.join(dirs, ZIM_STATUS)
-
-	if not os.path.isfile(pikfile):
-		res = {name: DOWNLOADING_STATUS}
+		session = Session()
 		try:
-			with open(pikfile, 'wb') as f:
-				pickle.dump(res, f)
-			return True
+			dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
+
+			for d in dumps:
+				name, size, timestamp = d
+
+				zimInfo = session.query(ZimStatus).filter(ZimStatus.name == name).first()
+				if zimInfo is None:
+					session.add(ZimStatus(name = name, size = size, timestamp = timestamp, status = WAITING_STATUS))
+					session.commit()
+					logging.info(f"add new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
+				elif zimInfo.timestamp > timestamp or zimInfo.size != size:
+					session.query(ZimStatus).filter(ZimStatus.name == name).update({ZimStatus.size: size, ZimStatus.timestamp: timestamp, ZimStatus.status: WAITING_STATUS})
+					session.commit()
+					logging.info(f"update new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
 		except:
-			return False
+			session.rollback()
+		finally:
+			session.close()
+
+		#update every day
+		time.sleep(86400)
+
+#trigger a zim file to downloading status
+def trigger_wikipedia_downloading(name, dirs):
+	session = Session()
 
 	try:
-		with open(pikfile, 'rb') as f:
-			res = pickle.load(f)
-			res[name] = DOWNLOADING_STATUS
-		with open(pikfile, 'wb') as f:
-			pickle.dump(res, f)
-		return True
+		zimInfos = session.query(ZimStatus).order_by(ZimStatus.timestamp).all();
+		if zimInfos is None:
+			session.close()
+			return
+
+		for info in zimInfos:
+			if info.status == UPLOADED_STATUS:
+				continue
+			elif info.status == WAITING_STATUS:
+				session.query(ZimStatus).filter(ZimStatus.name == info.name).update({ZimStatus.status: UPLOADING_STATUS})
+				session.commit()
+				logging.info(f"trigger zim file: {info.name} status to {UPLOADING_STATUS}")
+				break
+			else:
+				logging.info(f"zim file: {info.name} status now is {info.status}")
+				break
 	except:
-		return False
+		session.rollback()
+	finally:
+		session.close()
 
 if __name__ == '__main__':
 	argv = sys.argv[1:]
 
-	host = FAIROS_HOST
-	version = FAIROS_VERSION
-	user = ''
-	password = ''
-	dirs = '/tmp/wikipedia/zim'
+	dbname = '/tmp/wikipedia/wikipedia.db'
 	#parse args
 	try:
-		opts, args = getopt.getopt(argv, "h:v:u:p:d:", [
-			"host=",
-			"version=",
-            "user=",
-            "password=",
-            "dirs="
+		opts, args = getopt.getopt(argv, "d:", [
+            "dbname="
         ])
 	except:
 		logging.error("parse arguments failed")
 		sys.exit(-1)
 
 	for opt, arg in opts:
-		if opt in ['--host','-h']:
-			host = arg
-		elif opt in ['--version','-v']:
-			version = arg
-		elif opt in ['--user','-u']:
-			user = arg
-		elif opt in ['--password','-p']:
-			password = arg
-		elif opt in ['--dirs', '-d']:
-			dirs = arg
+		if opt in ['--dbname','-d']:
+			dbname = arg
 
-	#download zim status from fairos if not exists in local
-	pikfile = os.path.join(dirs, ZIM_STATUS)
-	if os.path.isfile(pikfile) == False:
-		fs = init_fairos(user, password, host, version)
+	#create new sqlite engine
+	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=False)
 
-		if fs is None:
-			sys.exit(-1)	
+	#create tables if not exists
+	Base.metadata.create_all(engine, checkfirst=True)
 
-		if download_zim_status_file(dirs, fs, POD_NAME)	== False:
-			logging.error(f"download zim status file from fairos faied")
-			sys.exit(-1)
+	#create Session maker
+	Session = sessionmaker(bind = engine)
 
+	#start a thread to update zim list from dumps.wikimedia.org
+	Thread(target = update_zim_dump_list).start()
+
+	#trigger a zim file to uploading status
 	while True:
 
-		#get all zim file list from the dump website
-		dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
-		logging.info(f"get wikipedia dumps success, count: {len(dumps)}")
-
-		#check zim file one by one based on the zim timestamp from oldest to newest
-		for d in dumps:
-
-			name, size, timestamp = d
-
-			keyname = hashlib.md5(name.encode('utf-8')).hexdigest()
-
-			status, err = check_zim_status(keyname, dirs)
-
-			if err != 'success':
-				logging.error(f"check zim: {name} status error: {err}")
-				break
-			elif status == '' or status is None:
-				res = trigger_wikipedia_update(keyname, dirs)
-				if res:
-					logging.info(f"trigger zim: {name} to update to downloading success")
-				else:
-					logging.warning(f"trigger zim: {name} to update to downloading failed")
-				break				
-			elif status == DOWNLOADING_STATUS:
-				logging.info(f"zim: {name} status now is {status}")
-				break
-			elif status == EXTRACTING_STATUS:
-				logging.info(f"zim: {name} status now is {status}")
-				break
-			elif status == UPLOADING_STATUS:
-				logging.info(f"zim: {name} status now is {status}")
-				break
-			elif type(status) == int and status < timestamp:
-				res = trigger_wikipedia_update(keyname, dirs)
-				if res:
-					logging.info(f"trigger zim: {name} to update to downloading success")
-				else:
-					logging.warning(f"trigger zim: {name} to update to downloading failed")
-				break				
-			else:
-				continue
+		trigger_wikipedia_downloading()
 
 		time.sleep(120)

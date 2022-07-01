@@ -144,10 +144,6 @@ const handleClick = async () => {
 
     tokenList.value = tokenList.value.slice(start, end);
 
-    for (const i in tokenList.value){
-      tokenList.value[i].status = await bzzwikimirror.getZimStatus(tokenList.value[i].name);
-    }
-
   }catch(e){
      tokenList.value = new Array();
   }finally{
