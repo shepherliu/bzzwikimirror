@@ -200,7 +200,7 @@ if __name__ == '__main__':
 			dbname = arg
 
 	#create new sqlite engine
-	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=False)
+	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=True)
 
 	#create tables if not exists
 	Base.metadata.create_all(engine, checkfirst=True)
