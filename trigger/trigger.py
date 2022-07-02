@@ -154,7 +154,7 @@ def update_zim_dump_list():
 		time.sleep(86400)
 
 #trigger a zim file to downloading status
-def trigger_wikipedia_downloading(name, dirs):
+def trigger_wikipedia_downloading():
 	session = Session()
 
 	try:

@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
 	#parse args
 	try:
-		opts, args = getopt.getopt(argv, "d:r:", [
+		opts, args = getopt.getopt(argv, "d:s:", [
             "dbname=",
             "src="
         ])

@@ -152,8 +152,8 @@ class Resquest(resource.Resource):
 		session = Session()
 
 		try:
-			zimInfos = session.query(ZimStatus).order_by(ZimStatus.timestamp).all();
-			if zimInfos not None:
+			zimInfos = session.query(ZimStatus).order_by(ZimStatus.timestamp).all()
+			if zimInfos is not None:
 				for info in zimInfos:
 					zimlist.append({
 						'name': info.name,
@@ -207,7 +207,7 @@ class Resquest(resource.Resource):
 
 		try:
 			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'html').order_by(FileStatus.name).offset(offset).limit(pageSize).all()
-			if fileInfos not None:
+			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
 						'name': os.path.basename(info.name),
@@ -245,7 +245,7 @@ class Resquest(resource.Resource):
 
 		try:
 			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'html').filter(FileStatus.name.like(f"%{search}%")).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
-			if fileInfos not None:
+			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
 						'name': os.path.basename(info.name),
@@ -283,7 +283,7 @@ class Resquest(resource.Resource):
 
 		try:
 			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'html').filter(FileStatus.name.like(f"%{search}%")).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
-			if fileInfos not None:
+			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
 						'name': os.path.basename(info.name),

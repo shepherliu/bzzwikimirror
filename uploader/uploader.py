@@ -101,7 +101,7 @@ def upload_files(name:str, dirs:str):
 			session = Session()
 			try:
 				fileInfo = session.query(FileStatus).filter(FileStatus.name == relname).first()
-				if fileInfo not None and fileInfo.md5 == md5sum:
+				if fileInfo is not None and fileInfo.md5 == md5sum:
 					totalcnt += 1
 					session.close()
 					break
