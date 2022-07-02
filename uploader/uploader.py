@@ -120,6 +120,8 @@ def upload_files(name:str, dirs:str):
 				session.commit()
 				totalcnt += 1
 				logging.info(f"upload file: {filepath} success, reference: {reference}, total process: {totalcnt}/{len(filelist)}")
+				session.close()
+				break
 			except:
 				session.rollback()
 			finally:

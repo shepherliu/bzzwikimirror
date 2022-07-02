@@ -108,11 +108,7 @@ const getTokenCount = async () => {
   const newTokenList = new Array();
 
   for(const i in res){
-    const paths = res[i].split('/');
-    newTokenList.push({
-      name: paths[paths.length-1],
-      link: res[i],
-    })
+    newTokenList.push(res[i]);
   }
 
   tokenList.value = newTokenList;
