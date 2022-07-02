@@ -9,13 +9,9 @@ wiki mirror based on swarm
 
     git clone https://github.com/shepherliu/bzzwikimirror.git
 
-3. cd to this project and build the docker image: 
+3. cd to this project and run the docker-compose service: 
    
-    cd bzzwikimirror && sh build.sh
-
-4. run the docker-compose service: 
-
-    sh run.sh
+    cd bzzwikimirror && sh run.sh
     
     
 ***How It Works***
