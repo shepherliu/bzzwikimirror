@@ -75,6 +75,8 @@ class Resquest(resource.Resource):
 
 		path = request.path.decode('utf-8').split('?')[0]
 
+		path = urllib.parse.unquote(path)
+
 		if path.startswith('/api/'):
 
 			if path.startswith('/api/zimlist'):
@@ -124,8 +126,6 @@ class Resquest(resource.Resource):
 	#read file from fair os
 	def getFileFromSwarm(self, filepath:str):
 		session = Session()
-
-		filepath = urllib.parse.unquote(filepath)
 
 		try:
 			fileInfo = session.query(FileStatus).filter(FileStatus.name == filepath).first()
