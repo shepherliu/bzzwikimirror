@@ -87,8 +87,16 @@ def upload_files(name:str, dirs:str):
 			ext = 'document'	
 
 		md5sum = ''
+		content = b''
 		with open(filepath, 'rb') as f:
-			md5sum = hashlib.md5(f.read()).hexdigest()
+			content = f.read()
+
+		if len(content) == 0:
+			totalcnt += 1
+			logging.info(f"ignore empty file: {filepath}")
+			continue
+
+		md5sum = hashlib.md5(content).hexdigest()
 
 		while True:
 			session = Session()
@@ -99,7 +107,7 @@ def upload_files(name:str, dirs:str):
 					session.close()
 					break
 
-				reference = upload_file_to_swarm(filepath)
+				reference = upload_file_to_swarm(content)
 				#try again
 				if reference is None:
 					logging.warning(f"upload file: {filepath} to swarm failed")
@@ -129,13 +137,7 @@ def upload_files(name:str, dirs:str):
 
 	return True
 
-def upload_file_to_swarm(filepath):
-	basename = os.path.basename(filepath)
-
-	data = b''
-
-	with open(filepath, 'rb') as f:
-		data = f.read()
+def upload_file_to_swarm(data):
 
 	headers = {
 		'Content-Type': 'application/octet-stream',
