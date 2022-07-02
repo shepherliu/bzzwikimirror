@@ -13,6 +13,28 @@ wiki mirror based on swarm
    
     cd bzzwikimirror && sh run.sh
 
+4. you must change the docker-compose.yml file if you run with your own bee nodes.
+
+5. we build a daemon website at http://141.94.55.59:8080/
+
+6. if your want to run the http server only on your local system without upload the zim files duplicated.
+
+    (1) get the latest reference for the sqlite db file by : 
+
+        curl http://141.94.55.59:8080/api/dbname
+    
+    (2) download the db file through your bee node: 
+
+        wget http://localhost:1633/bytes/{refernece} -O wikipedai.db
+    
+    (3) build resources on local
+
+        npm install && npm build
+
+    (4) start the httpserver on local system: 
+
+        python3 httpserver.py -h http://localhost:1633 -r ./dist -d ./wikipedai.db
+
 ***Features***
 
 1. Support to show all the zim files status(waitting, downloading, extracting, uploading and uploaded).
