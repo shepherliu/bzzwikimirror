@@ -80,9 +80,9 @@ class Resquest(resource.Resource):
 			if path.startswith('/api/zimlist'):
 				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
 				return self.getZimListInfo()
-			elif path.startswith('/api/dbname'):
-				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
-				return self.getDbname()
+			elif path.startswith('/api/database'):
+				request.responseHeaders.addRawHeader(b"content-type", b"application/octet-stream")
+				return self.getDatabase()
 			elif path.startswith('/api/filelist'):
 				request.responseHeaders.addRawHeader(b"content-type", b"application/json")
 				relpath = os.path.relpath(path, '/api/filelist')
@@ -170,21 +170,32 @@ class Resquest(resource.Resource):
 		
 		return json.dumps(zimlist).encode('utf-8')
 
-	#get latest db info
-	def getDbname(self):
+	#get latest database 
+	def getDatabase(self):
 		session = Session()
 
 		try:
 			dbInfo = session.query(DbStatus).order_by(desc(DbStatus.timestamp)).first()
 			if dbInfo is None:
 				session.close()
-				return json.dumps({}).encode('utf-8')
+				return self.notFoundPage()
 			else:
 				session.close()
-				return json.dumps({'name': dbInfo.name, 'reference': dbInfo.reference, 'timestamp': dbInfo.timestamp}).encode('utf-8')
+
+				url = f"{SWARM_HOST}/bytes/{dbInfo.reference}"
+
+				res = requests.get(url)
+				
+				if res.status_code >= 200 and res.status_code < 300:
+					session.close()
+					return res.content
+				else:
+					logging.error(f"read database from swarm error: {res.text}")
+					session.close()
+					return self.notFoundPage()				
 		except:
 			session.close()
-			return json.dumps({}).encode('utf-8')
+			return self.notFoundPage()
 
 	#get file list
 	def getFileList(self, path):

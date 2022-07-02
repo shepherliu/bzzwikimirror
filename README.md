@@ -22,20 +22,16 @@ wiki mirror based on swarm
 6. we build a daemon website with swarm test network at http://141.94.55.59:8080/
 
 7. if you only want to run the http server on your local system without upload the zim files duplicated.
-
-    (1) get the latest reference for the sqlite db file by : 
-
-        curl http://141.94.55.59:8080/api/dbname
     
-    (2) download the db file through your bee node: 
+    (1) download the latest db file through your bee node: 
 
-        wget http://localhost:1633/bytes/{refernece} -O wikipedai.db
+        wget http://141.94.55.59:8080/api/database -O wikipedai.db
     
-    (3) build resources on local
+    (2) build resources on local
 
         npm install && npm build
 
-    (4) start the httpserver on local system: 
+    (3) start the httpserver on local system: 
 
         python3 httpserver.py -h http://localhost:1633 -r ./dist -d ./wikipedai.db
 
@@ -87,7 +83,7 @@ There are five components to make the wikis on the swarm.
 
     (1) prepare your own bee nodes on the local system
 
-    (2) download the sqlite db (if not exist on local)
+    (2) download the latest sqlite db http://141.94.55.59:8080/api/database (if not exist on local)
 
     (3) run http server on local, and then can view and search wikis through your web browser. 
 

@@ -219,6 +219,7 @@ if __name__ == '__main__':
 						logging.error(f"update dbname: {dbname} to swarm failed")
 					else:		
 						session.add(DbStatus(name = dbname, reference = reference, timestamp = int(time.time())))
+						session.commit()
 						logging.info(f"update dbname: {dbname} to swarm success, new reference is: {reference}")			
 				else:
 					logging.error(f"update zim file: {zimInfo.name} status to {UPLOADED_STATUS} failed")
