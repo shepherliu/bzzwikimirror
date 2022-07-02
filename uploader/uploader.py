@@ -12,7 +12,7 @@ import logging
 import hashlib
 import pathlib
 import shutil
-from requests_toolbelt import MultipartEncoder
+# from requests_toolbelt import MultipartEncoder
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -136,16 +136,21 @@ def upload_files(name:str, dirs:str):
 def upload_file_to_swarm(filepath):
 	basename = os.path.basename(filepath)
 
-	m = MultipartEncoder(fields = {
-		'file': (basename, open(filepath, 'rb'), 'application/octet-stream')
-	})
+	data = b''
+
+	with open(filepath, 'rb') as f:
+		data = f.read()
+
+	# m = MultipartEncoder(fields = {
+	# 	'file': (basename, open(filepath, 'rb'), 'application/octet-stream')
+	# })
 
 	headers = {
 		'Content-Type': 'application/octet-stream',
 		'swarm-postage-batch-id': SWARM_BATCH_ID
 	}
 
-	res = requests.post(url = f"{SWARM_HOST}/bytes", headers = headers , data = m)
+	res = requests.post(url = f"{SWARM_HOST}/bytes", headers = headers , data = data)
 
 	if res.status_code >= 200 and res.status_code < 300:
 		try:
