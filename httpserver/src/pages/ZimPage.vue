@@ -29,7 +29,7 @@
                     <el-link :href="zimExplorerUrl(item.name)" type="primary" target="_blank">{{item.name}}</el-link>
                   </td>
                   <td>{{item.size}}</td>
-                  <td>{{item.status.name}}</td>
+                  <td>{{item.status}}</td>
                   <td>{{item.timestamp}}</td>
                 </tr>
               </template>

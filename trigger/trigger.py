@@ -129,26 +129,29 @@ def parse_wikipedia_dumps(data = []):
 def update_zim_dump_list():
 	while True:
 
-		session = Session()
 		try:
 			dumps = parse_wikipedia_dumps(get_wikipedia_dumps())
 
 			for d in dumps:
+				session = Session()
 				name, size, timestamp = d
 
-				zimInfo = session.query(ZimStatus).filter(ZimStatus.name == name).first()
-				if zimInfo is None:
-					session.add(ZimStatus(name = name, size = size, timestamp = timestamp, status = WAITING_STATUS))
-					session.commit()
-					logging.info(f"add new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
-				elif zimInfo.timestamp > timestamp or zimInfo.size != size:
-					session.query(ZimStatus).filter(ZimStatus.name == name).update({ZimStatus.size: size, ZimStatus.timestamp: timestamp, ZimStatus.status: WAITING_STATUS})
-					session.commit()
-					logging.info(f"update new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
+				try:
+					zimInfo = session.query(ZimStatus).filter(ZimStatus.name == name).first()
+					if zimInfo is None:
+						session.add(ZimStatus(name = name, size = size, timestamp = timestamp, status = WAITING_STATUS))
+						session.commit()
+						logging.info(f"add new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
+					elif zimInfo.timestamp > timestamp or zimInfo.size != size:
+						session.query(ZimStatus).filter(ZimStatus.name == name).update({ZimStatus.size: size, ZimStatus.timestamp: timestamp, ZimStatus.status: WAITING_STATUS})
+						session.commit()
+						logging.info(f"update new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
+				except:
+					logging.error(f"update zim file: {name} status failed")
+				finally:
+					session.close()
 		except:
-			session.rollback()
-		finally:
-			session.close()
+			time.sleep(3600)
 
 		#update every day
 		time.sleep(86400)

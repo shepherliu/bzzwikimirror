@@ -219,7 +219,7 @@ if __name__ == '__main__':
 				if res:
 					zimInfo.status = UPLOADED_STATUS
 					session.commit()
-					logging.info(f"update zim file: {zimInfo.name} status to {zimInfo.status} success")
+					logging.info(f"update zim file: {zimInfo.name} status to {UPLOADED_STATUS} success")
 					shutil.rmtree(os.path.join(extract, zimInfo.name))
 
 					reference = upload_file_to_swarm(dbname)
@@ -229,7 +229,7 @@ if __name__ == '__main__':
 						session.add(DbStatus(name = dbname, reference = reference, timestamp = int(time.time())))
 						logging.info(f"update dbname: {dbname} to swarm success, new reference is: {reference}")			
 				else:
-					logging.error(f"update zim file: {zimInfo.name} status to {zimInfo.status} failed")
+					logging.error(f"update zim file: {zimInfo.name} status to {UPLOADED_STATUS} failed")
 		except:
 			session.rollback()
 		finally:

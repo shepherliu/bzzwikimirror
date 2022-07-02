@@ -9,6 +9,7 @@ import re
 import getopt
 import logging
 import urllib.parse
+from requests_toolbelt import urlretrieve
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -141,9 +142,9 @@ if __name__ == '__main__':
 				if res:
 					zimInfo.status = EXTRACTING_STATUS
 					session.commit()
-					logging.info(f"update zim file: {zimInfo.name} status to {zimInfo.status} success")
+					logging.info(f"update zim file: {zimInfo.name} status to {EXTRACTING_STATUS} success")
 				else:
-					logging.error(f"update zim file: {zimInfo.name} status to {zimInfo.status} failed")
+					logging.error(f"update zim file: {zimInfo.name} status to {EXTRACTING_STATUS} failed")
 		except:
 			session.rollback()
 		finally:
