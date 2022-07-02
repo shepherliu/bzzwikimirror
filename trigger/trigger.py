@@ -167,9 +167,9 @@ def trigger_wikipedia_downloading():
 			if info.status == UPLOADED_STATUS:
 				continue
 			elif info.status == WAITING_STATUS:
-				session.query(ZimStatus).filter(ZimStatus.name == info.name).update({ZimStatus.status: UPLOADING_STATUS})
+				session.query(ZimStatus).filter(ZimStatus.name == info.name).update({ZimStatus.status: DOWNLOADING_STATUS})
 				session.commit()
-				logging.info(f"trigger zim file: {info.name} status to {UPLOADING_STATUS}")
+				logging.info(f"trigger zim file: {info.name} status to {DOWNLOADING_STATUS}")
 				break
 			else:
 				logging.info(f"zim file: {info.name} status now is {info.status}")

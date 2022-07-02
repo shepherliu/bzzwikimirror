@@ -303,7 +303,7 @@ class Resquest(resource.Resource):
 #parse timestamp
 def parse_timestamp(timestamp):
 
-	return time.strftime("%d-%b-%Y %H:%M", time.ctime(timestamp))
+	return time.strftime("%d-%b-%Y %H:%M", time.localtime(timestamp))
 
 #parse file size
 def parse_size(size = 0.0):
