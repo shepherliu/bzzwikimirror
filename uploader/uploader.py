@@ -28,25 +28,25 @@ class ZimStatus(Base):
 	__tablename__ = 'zim_status'
 	__table_args__ = {"extend_existing": True}
 	id = Column(Integer, primary_key=True, autoincrement=True)
-	name = Column(String(256), indxe = True)
+	name = Column(String(256), index = True)
 	size = Column(Integer)
-	status = Column(String(32), indxe = True)
-	timestamp = Column(Integer, indxe = True)
+	status = Column(String(32), index = True)
+	timestamp = Column(Integer, index = True)
 
 class DbStatus(Base):
 	__tablename__ = 'db_status'
 	__table_args__ = {"extend_existing": True}
 	id = Column(Integer, primary_key=True, autoincrement=True)
-	name = Column(String(256), indxe = True)
+	name = Column(String(256), index = True)
 	reference = Column(String(256))
-	timestamp = Column(Integer, indxe = True)
+	timestamp = Column(Integer, index = True)
 
 class FileStatus(Base):
 	__tablename__ = 'file_status'
 	__table_args__ = {"extend_existing": True}
 	id = Column(Integer, primary_key=True, autoincrement=True)
-	name = Column(String(256), indxe = True)
-	ext = Column(String(32), indxe = True)
+	name = Column(String(256), index = True)
+	ext = Column(String(32), index = True)
 	md5 = Column(String(256))
 	reference = Column(String(256))
 
