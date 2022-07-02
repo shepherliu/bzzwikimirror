@@ -1,7 +1,7 @@
 # bzzwikimirror
 wiki mirror based on swarm
 
-*How to Run it On local?
+***How to Run it On local?***
 
 1. make sure that you are using x86_64 computer and using a linux system like ubuntu, install git, docker and docker-compose on your system first.
 
@@ -12,7 +12,16 @@ wiki mirror based on swarm
 3. cd to this project and run the docker-compose service: 
    
     cd bzzwikimirror && sh run.sh
-    
+
+***Features***
+
+1. Support to show all the zim files status(waitting, downloading, extracting, uploading and uploaded).
+
+2. Support paginations and search title for the wikis
+
+***Future Plan***
+
+1. Suport fulltext search for wiki content
     
 ***How It Works***
 <img width="965" alt="snapshot" src="https://user-images.githubusercontent.com/84829620/175287522-9b9a96b2-0c71-417c-a87e-1a65b8b58f3a.png">

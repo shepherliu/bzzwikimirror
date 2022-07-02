@@ -86,9 +86,9 @@ def upload_files(name:str, dirs:str):
 
 		relname = os.path.join(relpath, basename)
 
-		ext = 'other'
-		if relpath.find('/A/'):
-			ext = 'html'	
+		ext = 'resource'
+		if relpath.find('/A/') >= 0:
+			ext = 'document'	
 
 		md5sum = ''
 		with open(filepath, 'rb') as f:

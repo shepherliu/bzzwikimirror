@@ -208,7 +208,7 @@ class Resquest(resource.Resource):
 		session = Session()
 
 		try:
-			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'html').order_by(FileStatus.name).offset(offset).limit(pageSize).all()
+			fileInfos = session.query(FileStatus).filter(FileStatus.ext == 'document').order_by(FileStatus.name).offset(offset).limit(pageSize).all()
 			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
@@ -246,7 +246,7 @@ class Resquest(resource.Resource):
 		session = Session()
 
 		try:
-			fileInfos = session.query(FileStatus).filter(and_(FileStatus.ext == 'html', FileStatus.name.like(f"%{search}%"))).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
+			fileInfos = session.query(FileStatus).filter(and_(FileStatus.ext == 'document', FileStatus.name.like(f"%{search}%"))).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
 			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
@@ -284,7 +284,7 @@ class Resquest(resource.Resource):
 		session = Session()
 
 		try:
-			fileInfos = session.query(FileStatus).filter(and_(FileStatus.ext == 'html', FileStatus.name.like(f"%{search}%"))).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
+			fileInfos = session.query(FileStatus).filter(and_(FileStatus.ext == 'document', FileStatus.name.like(f"%{search}%"))).order_by(FileStatus.name).offset(offset).limit(pageSize).all()
 			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
