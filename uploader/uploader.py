@@ -12,7 +12,6 @@ import logging
 import hashlib
 import pathlib
 import shutil
-# from requests_toolbelt import MultipartEncoder
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -78,16 +77,13 @@ def upload_files(name:str, dirs:str):
 
 	#upload file list
 	for filepath in filelist:
-		#check if already upload or not
-		relpath = os.path.relpath(os.path.dirname(filepath), rootpath)
-		relpath = os.path.join('/', relpath)	
 
-		basename = os.path.basename(filepath)
+		relpath = '/' + os.path.relpath(os.path.dirname(filepath), rootpath)
 
-		relname = os.path.join(relpath, basename)
+		relname = os.path.join(relpath, os.path.basename(filepath))
 
 		ext = 'resource'
-		if relpath.find('/A/') >= 0:
+		if relname.find('/A/') >= 0:
 			ext = 'document'	
 
 		md5sum = ''
@@ -140,10 +136,6 @@ def upload_file_to_swarm(filepath):
 
 	with open(filepath, 'rb') as f:
 		data = f.read()
-
-	# m = MultipartEncoder(fields = {
-	# 	'file': (basename, open(filepath, 'rb'), 'application/octet-stream')
-	# })
 
 	headers = {
 		'Content-Type': 'application/octet-stream',
