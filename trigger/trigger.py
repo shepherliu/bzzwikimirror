@@ -121,7 +121,7 @@ def parse_wikipedia_dumps(data = []):
 
 		name, timestamp, size = d
 
-		res.append([name, size, parse_timestamp(timestamp)])
+		res.append([name, int(size), parse_timestamp(timestamp)])
 	
 	return sorted(res, key = lambda x: x[2])
 
