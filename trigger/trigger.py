@@ -37,7 +37,16 @@ class DbStatus(Base):
 	id = Column(Integer, primary_key=True, autoincrement=True)
 	name = Column(String(256), indxe = True)
 	reference = Column(String(256))
-	timestamp = Column(Integer, indxe = True)
+	timestamp = Column(Integer, indxe = True)	
+
+class FileStatus(Base):
+	__tablename__ = 'file_status'
+	__table_args__ = {"extend_existing": True}
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	name = Column(String(256), indxe = True)
+	ext = Column(String(32), indxe = True)
+	md5 = Column(String(256))
+	reference = Column(String(256))
 
 WIKIPEDIA_HOST = "https://dumps.wikimedia.org/other/kiwix/zim/wikipedia/"
 

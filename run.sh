@@ -26,6 +26,14 @@ cd uploader
 
 docker build -t bzzwikimirror/uploader:latest .
 
+#build httpserver
+cd $currentPath
+cd httpserver
+
+npm install && npm run build 
+
+docker build -t bzzwikimirror/httpserver:latest .
+
 #run docker-compose
 cd $currentPath
 
