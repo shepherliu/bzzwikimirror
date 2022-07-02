@@ -11,8 +11,7 @@ import mimetypes
 import requests
 import hashlib
 import pathlib
-
-from threading import Thread
+import urllib.parse
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
@@ -126,11 +125,13 @@ class Resquest(resource.Resource):
 	def getFileFromSwarm(self, filepath:str):
 		session = Session()
 
+		filepath = urllib.parse.unquote(filepath)
+
 		try:
 			fileInfo = session.query(FileStatus).filter(FileStatus.name == filepath).first()
 			if fileInfo is None:
 				session.close()
-				return self.notFoundPage
+				return self.notFoundPage()
 
 			url = f"{SWARM_HOST}/bytes/{fileInfo.reference}"
 
