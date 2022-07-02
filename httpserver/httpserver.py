@@ -299,7 +299,8 @@ class Resquest(resource.Resource):
 
 	#not found page
 	def notFoundPage(self):
-		return f"file is not found".encode('utf-8')
+
+		return b"file is not found"
 
 #parse timestamp
 def parse_timestamp(timestamp):

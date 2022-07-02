@@ -43,7 +43,7 @@
         <div>
           <el-button type="primary" style="margin-top: 10px;" @click="onHandlePrev">Prev
           </el-button>
-          <el-button type="primary" style="margin-top: 10px;" @click="onHandleNext" :disabled="hasMore">Next
+          <el-button type="primary" style="margin-top: 10px;" @click="onHandleNext" :disabled="!hasMore">Next
           </el-button>          
       </div>
       </el-footer>
@@ -72,7 +72,7 @@ const contentSearch = ref('');
 
 const activeName = connectState.activeName;
 const loadStatus = ref(false);
-const pageSize = ref(100);
+const pageSize = ref(30);
 const currentPage = ref(0);
 const tokenList = ref(new Array());
 const hasMore = ref(false);
