@@ -73,7 +73,7 @@ services:
       - "${DEBUG_API_ADDR:-127.0.0.1:1635}${BEE_DEBUG_API_ADDR:-:1635}"
     volumes:
       - bee:/home/bee/.bee
-    command: start
+    command: start --resolver-options "https://cloudflare-eth.com"
       
 volumes:
   bee:
