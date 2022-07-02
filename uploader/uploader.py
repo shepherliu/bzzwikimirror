@@ -150,7 +150,7 @@ def upload_file_to_swarm(filepath):
 		'swarm-collection': False
 	}
 
-	res = requests.post(url = f"{SWARM_HOST}/bzz/", headers = headers , cookies = cookies, data = m)
+	res = requests.post(url = f"{SWARM_HOST}/bzz/", headers = headers , data = m)
 
 	if res.status_code >= 200 and res.status_code < 300:
 		try:

@@ -136,7 +136,7 @@ if __name__ == '__main__':
 				if res:
 					zimInfo.status = UPLOADING_STATUS
 					session.commit()
-					shutil.rmtree(os.path.join(src, zimInfo.name))
+					os.remove(os.path.join(src, zimInfo.name))
 					logging.info(f"update zim file: {zimInfo.name} status to {UPLOADING_STATUS} success")
 				else:
 					logging.error(f"update zim file: {zimInfo.name} status to {UPLOADING_STATUS} failed")
