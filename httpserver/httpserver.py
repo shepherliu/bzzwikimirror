@@ -10,6 +10,7 @@ import logging
 import mimetypes
 import requests
 import hashlib
+import pathlib
 
 from threading import Thread
 
@@ -210,8 +211,8 @@ class Resquest(resource.Resource):
 			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
-						'name': os.path.basename(info.name),
-						'link': f"{SWARM_HOST}/bzz/{info.reference}"
+						'name':  pathlib.Path(info.name).stem,
+						'link': info.name
 					})
 		except:
 			fileList = []
@@ -248,8 +249,8 @@ class Resquest(resource.Resource):
 			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
-						'name': os.path.basename(info.name),
-						'link': f"{SWARM_HOST}/bzz/{info.reference}"
+						'name':  pathlib.Path(info.name).stem,
+						'link': info.name
 					})
 		except:
 			fileList = []
@@ -286,8 +287,8 @@ class Resquest(resource.Resource):
 			if fileInfos is not None:
 				for info in fileInfos:
 					fileList.append({
-						'name': os.path.basename(info.name),
-						'link': f"{SWARM_HOST}/bzz/{info.reference}"
+						'name':  pathlib.Path(info.name).stem,
+						'link': info.name
 					})
 		except:
 			fileList = []

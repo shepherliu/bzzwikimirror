@@ -33,7 +33,9 @@
         </el-row>  
         <el-row :gutter="40">
           <template v-for="item in tokenList" :key="item.link">
-            <el-link :href="item.link" type="primary" target="_blank">{{item.name}}</el-link>
+            <el-col :span="8">
+              <el-link :href="item.link" type="primary" target="_blank">{{item.name}}</el-link>
+            </el-col>
           </template>
         </el-row>
       </el-main>
