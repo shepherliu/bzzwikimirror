@@ -9,6 +9,7 @@ import re
 import getopt
 import logging
 import shutil
+import subprocess
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -124,7 +125,7 @@ if __name__ == '__main__':
 		session = Session()
 
 		try:
-			zimInfo = session.query(ZimStatus).filter(ZimStatus.status == EXTRACTING_STATUS).order_by(ZimStatus.timestamp).first();
+			zimInfo = session.query(ZimStatus).filter(ZimStatus.status == EXTRACTING_STATUS).order_by(ZimStatus.timestamp).first()
 			if zimInfo is None:
 				session.close()
 				logging.info("no zim files need to extract")
