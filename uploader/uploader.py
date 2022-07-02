@@ -72,9 +72,6 @@ def upload_files(name:str, dirs:str):
 
 	#collect file list for the dir
 	for root, _, files in os.walk(rootpath):
-		relpath = os.path.relpath(root, rootpath)
-		relpath = os.path.join(fairpath, relpath)
-
 		for file in files:
 			filepath = os.path.join(root, file)
 			filelist.append(filepath)
@@ -122,7 +119,7 @@ def upload_files(name:str, dirs:str):
 				
 				session.commit()
 				totalcnt += 1
-				logging.info(f"upload file: {filepath} success, total process: {totalcnt}/{len(filelist)}")
+				logging.info(f"upload file: {filepath} success, reference: {reference}, total process: {totalcnt}/{len(filelist)}")
 			except:
 				session.rollback()
 			finally:
@@ -137,24 +134,20 @@ def upload_files(name:str, dirs:str):
 def upload_file_to_swarm(filepath):
 	basename = os.path.basename(filepath)
 
-	types, encoding = mimetypes.guess_type(filepath)
-
 	m = MultipartEncoder(fields = {
-		'name': basename,
-		'file': (basename, open(filepath, 'rb'), types)
+		'file': (basename, open(filepath, 'rb'), 'application/octet-stream')
 	})
 
 	headers = {
-		'Content-Type': m.content_type,
-		'swarm-postage-batch-id': SWARM_BATCH_ID,
-		'swarm-collection': False
+		'Content-Type': 'application/octet-stream',
+		'swarm-postage-batch-id': SWARM_BATCH_ID
 	}
 
-	res = requests.post(url = f"{SWARM_HOST}/bzz/", headers = headers , data = m)
+	res = requests.post(url = f"{SWARM_HOST}/bytes", headers = headers , data = m)
 
 	if res.status_code >= 200 and res.status_code < 300:
 		try:
-			return res.json().reference
+			return res.json()['reference']
 		except:
 			return None
 

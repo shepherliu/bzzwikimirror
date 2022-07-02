@@ -43,7 +43,7 @@ services:
         max-size: "10M"    
     volumes:
       - bzzwikimirror:/tmp
-    command: -e /tmp/wikipedia/doc -d /tmp/wikipedia/wikipedia.db -h http://127.0.0.1:1633 -b 8fb2e684bac716f7d568b7a69bb8711025accfa089366427590c1615d1619f76
+    command: -e /tmp/wikipedia/doc -d /tmp/wikipedia/wikipedia.db -h http://141.94.55.59:1633 -b 8fb2e684bac716f7d568b7a69bb8711025accfa089366427590c1615d1619f76
 
   bzzwikimirror-httpserver:
     image: bzzwikimirror/httpserver:latest
@@ -56,7 +56,7 @@ services:
       - bzzwikimirror:/tmp          
     ports:
       - "${API_ADDR:-8080}${BEE_API_ADDR:-:8080}"    
-    command: -h http://127.0.0.1:1633  -r /dist -d /tmp/wikipedia/wikipedia.db    
+    command: -h http://141.94.55.59:1633  -r /dist -d /tmp/wikipedia/wikipedia.db    
 
 volumes:
   bzzwikimirror:
