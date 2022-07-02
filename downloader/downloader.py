@@ -9,7 +9,7 @@ import re
 import getopt
 import logging
 import urllib.parse
-from requests_toolbelt import urlretrieve
+from urllib.request import urlretrieve
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base

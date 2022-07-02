@@ -146,8 +146,8 @@ def update_zim_dump_list():
 						session.query(ZimStatus).filter(ZimStatus.name == name).update({ZimStatus.size: size, ZimStatus.timestamp: timestamp, ZimStatus.status: WAITING_STATUS})
 						session.commit()
 						logging.info(f"update new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
-				except:
-					logging.error(f"update zim file: {name} status failed")
+				except Exception as e:
+					logging.error(f"update zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS} failed for {str(e)}")
 				finally:
 					session.close()
 		except:
@@ -200,7 +200,7 @@ if __name__ == '__main__':
 			dbname = arg
 
 	#create new sqlite engine
-	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=True)
+	engine = create_engine(f"sqlite:///{dbname}?check_same_thread=False", echo=False)
 
 	#create tables if not exists
 	Base.metadata.create_all(engine, checkfirst=True)
