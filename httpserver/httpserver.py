@@ -131,7 +131,7 @@ class Resquest(resource.Resource):
 				session.close()
 				return self.notFoundPage
 
-			url = f"{SWARM_HOST}/bzz/{fileInfo.reference}"
+			url = f"{SWARM_HOST}/bytes/{fileInfo.reference}"
 
 			res = requests.get(url)
 			
