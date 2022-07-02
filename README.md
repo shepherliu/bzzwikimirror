@@ -7,17 +7,21 @@ wiki mirror based on swarm
 
 2. clone this project to the local
 
-    git clone https://github.com/shepherliu/bzzwikimirror.git
+        git clone https://github.com/shepherliu/bzzwikimirror.git
 
-3. cd to this project and run the docker-compose service: 
+3. cd to this project
+
+        cd bzzwikimirror
+
+4. change the docker-compose.yml configures with your own bee nodes.
+
+5. run the docker-compose service: 
    
-    cd bzzwikimirror && sh run.sh
+        sh run.sh
 
-4. you must change the docker-compose.yml file if you run with your own bee nodes.
+6. we build a daemon website with swarm test network at http://141.94.55.59:8080/
 
-5. we build a daemon website at http://141.94.55.59:8080/
-
-6. if your want to run the http server only on your local system without upload the zim files duplicated.
+7. if you only want to run the http server on your local system without upload the zim files duplicated.
 
     (1) get the latest reference for the sqlite db file by : 
 
@@ -40,6 +44,10 @@ wiki mirror based on swarm
 1. Support to show all the zim files status(waitting, downloading, extracting, uploading and uploaded).
 
 2. Support paginations and search title for the wikis
+
+3. Support run a python httpserver locally with your own bee nodes to view and search the wikis.
+
+4. Using sqlite3 to store the files references and to support search functions. the sqlite file also will be uploaded to swarm for backup. 
 
 ***Future Plan***
 
