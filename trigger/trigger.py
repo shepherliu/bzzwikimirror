@@ -143,11 +143,12 @@ def update_zim_dump_list():
 						session.commit()
 						logging.info(f"add new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
 					elif zimInfo.timestamp > timestamp or zimInfo.size != size:
+						logging.info(f"zim update {zimInfo.timestamp}, {timestamp}, {zimInfo.size}, {size}")
 						session.query(ZimStatus).filter(ZimStatus.name == name).update({ZimStatus.size: size, ZimStatus.timestamp: timestamp, ZimStatus.status: WAITING_STATUS})
 						session.commit()
 						logging.info(f"update new zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS}")
-				except Exception as e:
-					logging.error(f"update zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS} failed for {str(e)}")
+				except:
+					logging.error(f"update zim file: {name}, size: {parse_size(size)}, time:{timestamp}, status: {WAITING_STATUS} failed")
 				finally:
 					session.close()
 		except:
