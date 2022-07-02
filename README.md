@@ -21,7 +21,9 @@ wiki mirror based on swarm
 
 6. we build a daemon website with swarm test network at http://141.94.55.59:8080/
 
-7. if you only want to run the http server on your local system without upload the zim files duplicated.
+7. see our daemon video at: 
+
+8. if you only want to run the http server on your local system without upload the zim files duplicated.
     
     (1) download the latest db file through your bee node: 
 
@@ -48,6 +50,8 @@ wiki mirror based on swarm
 ***Future Plan***
 
 1. Suport fulltext search for wiki content
+
+2. Replace sqlite3 database to fairos (when fairos is stable enough to support large amount of files)
     
 ***How It Works***
 
