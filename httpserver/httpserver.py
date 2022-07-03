@@ -12,6 +12,7 @@ import requests
 import hashlib
 import pathlib
 import urllib.parse
+from functools import lru_cache
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
@@ -123,7 +124,8 @@ class Resquest(resource.Resource):
 		except:
 			return self.notFoundPage()
 
-	#read file from fair os
+	#read file from swarm
+	@lru_cache(maxsize=1024, typed=False)
 	def getFileFromSwarm(self, filepath:str):
 		session = Session()
 
@@ -315,11 +317,13 @@ class Resquest(resource.Resource):
 		return b"file is not found"
 
 #parse timestamp
+@lru_cache(maxsize=10240, typed=False)
 def parse_timestamp(timestamp):
 
 	return time.strftime("%d-%b-%Y %H:%M", time.localtime(timestamp))
 
 #parse file size
+@lru_cache(maxsize=10240, typed=False)
 def parse_size(size = 0.0):
 
 	if size < 1024:
