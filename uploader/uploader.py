@@ -93,7 +93,7 @@ def upload_files(name:str, dirs:str):
 
 		if len(content) == 0:
 			totalcnt += 1
-			logging.info(f"ignore empty file: {filepath}")
+			logging.info(f"ignore empty file: {filepath}, total process: {totalcnt}/{len(filelist)}")
 			continue
 
 		md5sum = hashlib.md5(content).hexdigest()
