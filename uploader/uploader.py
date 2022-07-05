@@ -66,6 +66,7 @@ logging.basicConfig(format='%(levelname)s %(asctime)s %(message)s', level=loggin
 def upload_files(name:str, dirs:str):
 	totalcnt = 0
 	filelist = []
+	linklist = []
 
 	rootpath = os.path.join(dirs, name)
 
@@ -73,7 +74,10 @@ def upload_files(name:str, dirs:str):
 	for root, _, files in os.walk(rootpath):
 		for file in files:
 			filepath = os.path.join(root, file)
-			filelist.append(filepath)
+			if os.path.islink(filepath):
+				linklist.append(filepath)
+			else:
+				filelist.append(filepath)
 
 	#upload file list
 	for filepath in filelist:
@@ -93,7 +97,7 @@ def upload_files(name:str, dirs:str):
 
 		if len(content) == 0:
 			totalcnt += 1
-			logging.info(f"ignore empty file: {filepath}, total process: {totalcnt}/{len(filelist)}")
+			logging.info(f"ignore empty file: {filepath}")
 			continue
 
 		md5sum = hashlib.md5(content).hexdigest()
@@ -130,6 +134,41 @@ def upload_files(name:str, dirs:str):
 				session.rollback()
 			finally:
 				session.close()
+
+	for filepath in linklist:
+		relpath = '/' + os.path.relpath(os.path.dirname(filepath), rootpath)
+
+		relname = os.path.join(relpath, os.path.basename(filepath))
+
+		linkname = '/' + os.readlink(filepath)
+
+		session = Session()
+		try:
+			fileInfo = session.query(FileStatus).filter(FileStatus.name == linkname).first()
+			if fileInfo is None:
+				totalcnt +=1
+				session.close()
+
+			linkInfo = session.query(FileStatus).filter(FileStatus.name == relname).first()
+			if linkInfo is None:
+				session.add(FileStatus(name = relname, ext = fileInfo.ext, fileInfo.md5, fileInfo.reference))
+				session.commit()
+				totalcnt += 1
+				logging.info(f"upload link file: {filepath} success, reference: {fileInfo.reference}, total process: {totalcnt}/{len(filelist)}")
+				session.close()			
+			elif linkInfo.ext != fileInfo.ext or linkInfo.md5 != fileInfo.md5 or linkInfo.reference != fileInfo.reference:
+				linkInfo.ext = fileInfo.ext
+				linkInfo.md5 = fileInfo.md5
+				linkInfo.reference = fileInfo.reference
+				session.commit()
+				totalcnt += 1
+				session.close()
+			else:
+				totalcnt += 1
+				session.close()
+		except:
+			session.close()
+
 
 	#if all files upload success, update the status of the zim file status
 	if totalcnt < len(filelist):
