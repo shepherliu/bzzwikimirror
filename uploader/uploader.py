@@ -151,7 +151,7 @@ def upload_files(name:str, dirs:str):
 
 			linkInfo = session.query(FileStatus).filter(FileStatus.name == relname).first()
 			if linkInfo is None:
-				session.add(FileStatus(name = relname, ext = fileInfo.ext, fileInfo.md5, fileInfo.reference))
+				session.add(FileStatus(name = relname, ext = fileInfo.ext, md5 = fileInfo.md5, reference = fileInfo.reference))
 				session.commit()
 				totalcnt += 1
 				logging.info(f"upload link file: {filepath} success, reference: {fileInfo.reference}, total process: {totalcnt}/{len(filelist)}")
