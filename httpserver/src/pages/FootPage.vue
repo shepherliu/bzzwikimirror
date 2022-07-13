@@ -1,6 +1,6 @@
 <template>
 	<div class="copyright mt-1" style="padding-bottom: 10px">
-    <el-link type="success" target="_blank" href="https://gitcoin.co/hackathon">Gitcoin Hackathon Build For Learning</el-link>
+    <el-link type="success" href="javascript:void(0);">Build For Hackathons And Learnings</el-link>
   </div>	
 </template>
 
